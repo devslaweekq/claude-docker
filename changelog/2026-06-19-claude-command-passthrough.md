@@ -16,6 +16,11 @@
 - **`--exec` dispatch in `scripts/menu.sh`** (the in-container entrypoint):
   `--exec <args…>` runs `claude <args…>` directly, skipping the menu and the
   screen reset so output stays clean and pipeable.
+- **`launcher.bat` (Windows) forwards arguments safely.** Arguments are now passed
+  as bash positional parameters (`"$@"`) instead of being spliced into the
+  `bash -lic` command string, so quotes and spaces survive (e.g.
+  `launcher.bat -p "hello world"`). Enables passthrough from Windows:
+  `launcher.bat auth status`, `launcher.bat login`, etc.
 
 ## Changed
 - **`launcher` no longer auto-builds when the image is missing.** A missing image
