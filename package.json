@@ -1,0 +1,20 @@
+{
+  "name": "claude-docker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Isolated Claude Code in Docker",
+  "author": "devslaweekq",
+  "type": "commonjs",
+  "scripts": {
+    "build": "bash scripts/build.sh",
+    "build:docker": "docker compose -f ./docker-compose.dev.yml build --build-arg HTTP_PROXY= --build-arg HTTPS_PROXY= --build-arg http_proxy= --build-arg https_proxy=",
+    "format": "prettier -w .",
+    "launcher": "./launcher",
+    "push": "bash scripts/push.sh"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.4",
+    "prettier-plugin-packagejson": "^3.0.2",
+    "prettier-plugin-sort-json": "^4.2.0"
+  }
+}

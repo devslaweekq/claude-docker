@@ -1,0 +1,16 @@
+# Secrets and runtime state — do not commit
+.env
+certs/*.crt
+certs/*.key
+
+# Editor junk
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Windows: generated icon/shortcut
+claude.ico
+*.lnk
+
+.omc
