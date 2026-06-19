@@ -1,0 +1,16 @@
+# Installed layout (~/claude-docker) — image from Docker Hub, no local build.
+services:
+  claude:
+    image: slaweekq/claude-docker:latest
+    labels:
+      - claude-docker.role=session
+    network_mode: host
+    stdin_open: true
+    tty: true
+    user: '0:0'
+    env_file:
+      - .env
+    volumes:
+      - ${PROJECT_DIR}:/workspace
+      - ${CLAUDE_HOME}:/home/node
+      - ./certs:/tmp/certs-input:ro

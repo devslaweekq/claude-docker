@@ -1,0 +1,49 @@
+{
+  "mcpServers": {
+    "atlassian": {
+      "headers": {
+        "JIRA_API_TOKEN": "${JIRA_API_TOKEN:-}",
+        "JIRA_URL": "${JIRA_URL:-}",
+        "JIRA_USERNAME": "${JIRA_USERNAME:-}"
+      },
+      "type": "http",
+      "url": "https://mcp.atlassian.com/v1/mcp"
+    },
+    "context7": {
+      "headers": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:-}"
+      },
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
+    },
+    "github": {
+      "headers": {
+        "Authorization": "Bearer ${GH_TOKEN:-}"
+      },
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "kubernetes": {
+      "args": ["-y", "mcp-server-kubernetes"],
+      "command": "npx",
+      "env": {
+        "ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS": "true"
+      },
+      "type": "stdio"
+    },
+    "playwright": {
+      "args": ["-y", "@playwright/mcp@latest"],
+      "command": "npx",
+      "env": {},
+      "type": "stdio"
+    },
+    "sentry": {
+      "type": "http",
+      "url": "https://mcp.sentry.dev/mcp"
+    }
+  }
+}

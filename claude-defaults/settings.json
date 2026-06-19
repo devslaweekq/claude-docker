@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enabledPlugins": {
+    "claude-mem@thedotmack": true,
+    "oh-my-claudecode@omc": true,
+    "superpowers@claude-plugins-official": true
+  },
+  "env": {
+    "BASH_DEFAULT_TIMEOUT_MS": "30000",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "16384"
+  },
+  "extraKnownMarketplaces": {
+    "omc": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/Yeachan-Heo/oh-my-claudecode.git"
+      }
+    },
+    "thedotmack": {
+      "source": {
+        "repo": "thedotmack/claude-mem",
+        "source": "github"
+      }
+    }
+  },
+  "gitAttribution": true,
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "defaultMode": "auto",
+    "deny": [
+      "Read(.env*)",
+      "Read(./secrets/**)",
+      "Read(./**/credentials.json)",
+      "Read(./**/service-account.json)",
+      "Bash(rm -rf /)",
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(**/.env.production)",
+      "Read(**/.env.development)",
+      "Read(**/.env.staging)",
+      "Read(**/.env.test)"
+    ]
+  },
+  "skipWorkflowUsageWarning": true,
+  "spinnerTipsEnabled": false,
+  "theme": "dark-ansi"
+}
