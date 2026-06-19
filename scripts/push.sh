@@ -28,7 +28,6 @@ fi
 
 IMAGE="$DOCKER_USERNAME/claude-docker:latest"
 CACHE="$DOCKER_USERNAME/claude-docker:buildcache"
-LOCAL="claude-docker"
 
 if [ "$CI" != "true" ]; then
   echo "==> Stop running Claude Docker sessions (if any)"
@@ -37,8 +36,8 @@ if [ "$CI" != "true" ]; then
     docker stop "${running[@]}"
   fi
 
-  echo "==> Remove old local images: $LOCAL, $IMAGE"
-  docker rmi -f "$LOCAL" "$IMAGE" 2>/dev/null || true
+  echo "==> Remove old local image: $IMAGE"
+  docker rmi -f "$IMAGE" 2>/dev/null || true
 fi
 
 echo "==> Build and push: $IMAGE"
@@ -52,18 +51,14 @@ docker buildx build \
   .
 
 if [ "$CI" != "true" ]; then
-  echo "==> Pull and tag for local compose: $LOCAL"
+  echo "==> Pull image: $IMAGE"
   docker pull "$IMAGE"
-  docker tag "$IMAGE" "$LOCAL"
 fi
 
 echo
 echo "Done."
 echo "  Registry: $IMAGE"
 echo "  Cache:    $CACHE"
-if [ "$CI" != "true" ]; then
-  echo "  Local:    $LOCAL"
-fi
 
 # docker compose -f ./docker-compose.dev.* stop || true
 # docker compose -f ./docker-compose.dev.* down -v && docker compose -f ./docker-compose.dev.* rm -sfv
