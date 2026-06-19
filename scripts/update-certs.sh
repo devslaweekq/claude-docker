@@ -10,7 +10,8 @@ if [ -d /tmp/certs-input ]; then
     found=1
   done
   if [ "$found" = 1 ]; then
-    update-ca-certificates
+    # Debian update-ca-certificates is noisy (rehash warning on ca-certificates.crt bundle); suppress.
+    update-ca-certificates >/dev/null 2>&1
   fi
 fi
 
