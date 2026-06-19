@@ -6,6 +6,8 @@
 #   launcher --build    — local docker compose build (test changes, no push)
 #   launcher --pull     — pull latest image from Docker Hub, then start
 #   launcher --install  — add launcher to PATH (auto claude, or pick name if claude exists)
+#   launcher <args…>    — passthrough: run `claude <args…>` in the container, then exit
+#                         (e.g. `claude auth status`, `claude login`, `claude setup-token`)
 #
 # Image: slaweekq/claude-docker:latest
 
@@ -89,11 +91,13 @@ fi
 
 force_pull=0
 force_build=0
+passthrough_args=()                           # claude args forwarded into the container (claude auth status, login, …)
 
 for a in "$@"; do
   case "$a" in
     --pull)     force_pull=1 ;;
     --build)    force_build=1 ;;
+    *)          passthrough_args+=("$a") ;;
   esac
 done
 
@@ -137,11 +141,22 @@ if [ "$force_pull" -eq 1 ] || ! docker image inspect "$IMAGE" >/dev/null 2>&1; t
   docker compose -f ./docker-compose.yml pull
 fi
 
-# Build image on --build, or locally if pull did not provide the image (git clone only)
-if [ "$force_build" -eq 1 ] || { [ -f ./docker-compose.dev.yml ] && ! docker image inspect "$IMAGE" >/dev/null 2>&1; }; then
+# Build image only on explicit --build (regular users always pull a prebuilt image)
+if [ "$force_build" -eq 1 ]; then
   docker compose -f ./docker-compose.dev.yml build \
     --build-arg HTTP_PROXY= --build-arg HTTPS_PROXY= \
     --build-arg http_proxy= --build-arg https_proxy=
+fi
+
+# Passthrough: forward any unrecognized args straight to `claude` in a throwaway container,
+# then exit with claude's status. Reserved flags (--install/--pull/--build) never reach here.
+# Allocate a TTY only when stdin+stdout are terminals (interactive `claude login`);
+# pass -T otherwise so piped output stays clean (`claude auth status | grep …`).
+if [ ${#passthrough_args[@]} -gt 0 ]; then
+  tty_opts=()
+  { [ -t 0 ] && [ -t 1 ]; } || tty_opts=(-T)
+  exec docker compose -f ./docker-compose.yml run --rm "${tty_opts[@]}" \
+    --label claude-docker.role=exec claude --exec "${passthrough_args[@]}"
 fi
 
 exec docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${scratch_run_opts[@]}" claude "${mode_arg[@]}"

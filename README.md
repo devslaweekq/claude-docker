@@ -19,7 +19,7 @@ Run [Claude Code](https://docs.anthropic.com/en/docs/claude-code) in an isolated
 |                             | **A. Clone the repo**           | **B. Install script**     | **C. Docker image only**        |
 | --------------------------- | ------------------------------- | ------------------------- | ------------------------------- |
 | Best for                    | Development, Dockerfile changes | `bash scripts/install.sh` | Minimal setup, raw `docker run` |
-| Config lives in             | in repo; `~/claude-docker/`        | `~/claude-docker/`           | `~/claude-docker/`                 |
+| Config lives in             | in repo; `~/claude-docker/`     | `~/claude-docker/`        | `~/claude-docker/`              |
 | Start command (e.g. claude) | `./launcher`                    | `claude`                  | `docker run …`                  |
 | Smart cwd launch            | Yes — run from any project      | Yes                       | Pass your project path manually |
 
@@ -61,10 +61,31 @@ First run pulls the image from Docker Hub automatically.
 
 ### Commands
 
-| Command             | Action                            |
-| ------------------- | --------------------------------- |
-| `./launcher`        | Start a session                   |
-| `./launcher --pull` | Pull the latest image, then start |
+| Command                     | Action                                                         |
+| --------------------------- | -------------------------------------------------------------- |
+| `./launcher`                | Start a session                                                |
+| `./launcher --pull`         | Pull the latest image, then start                              |
+| `./launcher --build`        | Build the image locally (maintainers)                          |
+| `./launcher --install`      | Add a command to your PATH                                     |
+| `./launcher <claude args…>` | Passthrough — run `claude <args…>` in the container, then exit |
+
+#### Passthrough
+
+Any arguments that aren't launcher flags (`--install`, `--pull`, `--build`) are
+forwarded straight to `claude` inside a throwaway container, which runs the
+command and exits. With a PATH command from `--install`, the full claude CLI is
+available natively:
+
+```bash
+claude setup-token     # print a token to paste into .env
+claude login           # interactive OAuth; credentials persist in ~/claude-docker/home
+claude auth status     # check current auth
+claude --version
+```
+
+Output is pipeable (`claude auth status | grep …`) and the exit code is
+propagated, so passthrough works in scripts. Bare `claude` still opens the
+menu/session.
 
 ### Smart launch from any folder
 
@@ -154,11 +175,17 @@ If you use a **TLS proxy with a self-signed certificate**, add the certs volume:
 
 **Corporate token:** get it from your admin and put it in `CLAUDE_CODE_OAUTH_TOKEN`. You don't need access to the corporate Claude.ai web interface.
 
-To generate a token on any machine that has a browser:
+To generate a token using the container itself — no second terminal, no
+shelling into a running session — use [passthrough](#passthrough):
 
 ```bash
-claude setup-token
+claude setup-token     # paste the result into CLAUDE_CODE_OAUTH_TOKEN in .env
+# or, with a clone:
+./launcher setup-token
 ```
+
+`claude login` works the same way; credentials are written to the persistent
+`~/claude-docker/home` volume and picked up by your next session.
 
 Tokens last about one year.
 
@@ -214,12 +241,12 @@ TLS certificates are picked up at container start — no image rebuild needed.
 
 ## Troubleshooting
 
-| Problem                                    | Fix                                                                                 |
-| ------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `401` from Claude                          | Check `CLAUDE_CODE_OAUTH_TOKEN` or run `/login` inside the container                |
-| First-run login screen even with token set | Make sure the token is in `--env-file` or use method A (`./launcher`)               |
+| Problem                                    | Fix                                                                                    |
+| ------------------------------------------ | -------------------------------------------------------------------------------------- |
+| `401` from Claude                          | Check `CLAUDE_CODE_OAUTH_TOKEN` or run `/login` inside the container                   |
+| First-run login screen even with token set | Make sure the token is in `--env-file` or use method A (`./launcher`)                  |
 | `Settings Error` / invalid `settings.json` | Delete `~/claude-docker/home/.claude/settings.json` and restart — it will be recreated |
-| `cannot connect to Docker daemon`          | Start Docker Desktop / enable WSL integration                                       |
+| `cannot connect to Docker daemon`          | Start Docker Desktop / enable WSL integration                                          |
 
 ---
 

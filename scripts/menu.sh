@@ -130,6 +130,7 @@ run_scratch() {
 
 # --- direct launch (launcher passes target from host cwd) ---
 case "${1:-}" in
+  --exec)        shift; exec claude "$@" ;;   # passthrough: run `claude …` and exit (no menu, no screen reset)
   --scratch)     run_scratch "${2:-}" ;;
   /workspace/*)
     if [ -d "$1" ]; then
