@@ -15,7 +15,8 @@ download() {
 }
 
 echo "==> Installing claude-docker to $INSTALL_DIR"
-mkdir -p "$INSTALL_DIR/home/scratch" "$INSTALL_DIR/certs"
+[ -d "$INSTALL_DIR/home/scratch" ] || mkdir -p "$INSTALL_DIR/home/scratch"
+[ -d "$INSTALL_DIR/certs" ] || mkdir -p "$INSTALL_DIR/certs"
 chmod 700 "$INSTALL_DIR"
 
 echo "==> Downloading launcher and config"

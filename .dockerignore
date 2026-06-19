@@ -8,6 +8,7 @@ node_modules
 scripts/*.sh
 !scripts/menu.sh
 !scripts/update-certs.sh
+!scripts/ensure-claude-cli.sh
 
 .cursorignore
 .editorconfig

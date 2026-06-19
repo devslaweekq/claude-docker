@@ -17,10 +17,10 @@ RUN install -m 0755 -d /etc/apt/keyrings \
  && apt-get update && apt-get install -y --no-install-recommends gh \
  && rm -rf /var/lib/apt/lists/*
 
-# Claude Code + Playwright MCP in a separate layer: re-pulling @latest doesn't bust the apt layer above.
+# Claude Code in /usr/local — image seed; runtime prefers ~/.npm-global (writable, on volume).
 RUN npm install -g @anthropic-ai/claude-code@latest \
  && npm cache clean --force \
- && mkdir -p /home/node/.claude /workspace \
+ && mkdir -p /home/node/.claude /home/node/.npm-global /workspace \
  && chown -R node:node /home/node /workspace
 
 # Bun — copy ready binary from official image (faster and more reliable than curl script)
@@ -29,9 +29,11 @@ COPY --from=oven/bun:latest /usr/local/bin/bunx /usr/local/bin/bunx
 
 # Startup: TLS proxy certs (compose mount) → menu as node
 COPY scripts/update-certs.sh /usr/local/bin/update-certs.sh
+COPY scripts/ensure-claude-cli.sh /usr/local/bin/ensure-claude-cli.sh
 COPY scripts/menu.sh /usr/local/bin/claude-launch
 COPY scripts/sessions.js /usr/local/bin/claude-sessions
-RUN chmod +x /usr/local/bin/update-certs.sh /usr/local/bin/claude-launch /usr/local/bin/claude-sessions
+RUN chmod +x /usr/local/bin/update-certs.sh /usr/local/bin/ensure-claude-cli.sh \
+      /usr/local/bin/claude-launch /usr/local/bin/claude-sessions
 
 # Common defaults (settings + MCP) — seeded into ~/.claude at startup (see menu.sh)
 COPY claude-defaults/ /opt/claude-defaults/

@@ -4,6 +4,9 @@
 # Falls back to numeric menu (read) when fzf is unavailable.
 set -euo pipefail
 
+# shellcheck disable=SC1091
+source /usr/local/bin/ensure-claude-cli.sh
+
 WS="${WORKSPACE_DIR:-/workspace}"
 
 # empty proxy vars from .env must not override direct mode
@@ -13,7 +16,7 @@ done
 
 # --- seed shared defaults: settings (once), mcpServers (sync from repo) ---
 DEF="${CLAUDE_DEFAULTS:-/opt/claude-defaults}"
-mkdir -p "$HOME/.claude"
+[ -d "$HOME/.claude" ] || mkdir -p "$HOME/.claude"
 if [ ! -f "$HOME/.claude/settings.json" ] && [ -f "$DEF/settings.json" ]; then
   cp "$DEF/settings.json" "$HOME/.claude/settings.json"
 fi
@@ -73,7 +76,7 @@ make_new_dir() {
     echo "  Invalid name." >&2
     return 1
   fi
-  mkdir -p "$WS/$name"
+  [ -d "$WS/$name" ] || mkdir -p "$WS/$name"
   cd "$WS/$name"
   run_claude
 }
