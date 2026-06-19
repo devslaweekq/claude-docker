@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Isolated Claude Code in Docker",
+  "license": "MIT",
   "author": "devslaweekq",
   "type": "commonjs",
   "scripts": {
