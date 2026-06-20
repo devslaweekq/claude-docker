@@ -173,7 +173,18 @@ Run [ComfyUI](https://github.com/Comfy-Org/ComfyUI) locally in Docker with GPU a
 
 ### Requirements
 
-- NVIDIA GPU + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
+- NVIDIA GPU
+- `nvidia-container-toolkit` installed and configured:
+  ```bash
+  curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+    | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+  curl -sL https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+    | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+    | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+  sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+  sudo nvidia-ctk runtime configure --runtime=docker
+  sudo systemctl restart docker
+  ```
 - `slaweekq/comfyui:latest` image (pulled automatically on first `--comfyui` run)
 
 ### Start
@@ -195,12 +206,15 @@ Place model files in `~/claude-docker/comfyui/models/` — subdirectories mirror
 │   ├── clip/           # e.g. qwen_3_4b.safetensors
 │   ├── unet/           # e.g. z_image_turbo_bf16.safetensors
 │   └── vae/            # e.g. ae.safetensors
-└── output/             # generated images
+├── output/             # generated images
+└── user/
+    └── default/
+        └── workflows/  # drop .json workflow files here — they appear in ComfyUI UI instantly
 ```
 
 Generated images are saved to `~/claude-docker/comfyui/output/`.
 
-A bundled **Z-Image Turbo** txt2img workflow is available in the ComfyUI web UI out of the box (baked into the image).
+A **Z-Image Turbo** txt2img workflow (`default.json`) is pre-installed in `user/default/workflows/` and appears in the ComfyUI web UI out of the box. Add any custom workflows to the same folder.
 
 ---
 

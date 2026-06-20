@@ -21,7 +21,7 @@ Custom build recipe based on `nvidia/cuda:13.0.3-runtime-ubuntu22.04`:
 - Volumes:
   - `~/claude-docker/comfyui/models` → `/opt/ComfyUI/models` (host-mounted, persistent)
   - `~/claude-docker/comfyui/output` → `/opt/ComfyUI/output` (host-mounted, generated images)
-  - `comfyui_user` → `/opt/ComfyUI/user` (named Docker volume, preserves workflows/settings)
+  - `~/claude-docker/comfyui/user` → `/opt/ComfyUI/user` (host-mounted, drop workflows here)
 
 ### `launcher --comfyui` flag
 - Pulls `slaweekq/comfyui:latest` on first run if not cached locally
@@ -50,11 +50,20 @@ changes on `main`/`master`, or manually via `workflow_dispatch`. Uses the same D
 secrets as `docker-publish.yml` and calls `bash ./scripts/docker/push.sh --comfyui`.
 
 ### Install scripts (`scripts/install.sh`, `scripts/deb/postinst`)
-- Create `~/claude-docker/comfyui/{models,output}` on install for host-mounted volumes
-- No workflow files are copied to the host — they live inside the Docker image
+- Create `~/claude-docker/comfyui/{models,output,user/default/workflows}` on install
+- Seed `default.json` (Z-Image Turbo workflow) into `comfyui/user/default/workflows/` on first install
 
 ## Removed
 
 - `COMFYUI_PATH` env-var approach (host process, `scripts/menu.sh` conditional MCP sync)
 - Workflow file seeding to host (`~/claude-docker/comfyui/user/default/workflows/`)
   replaced by baking the workflow into the Docker image
+
+## Changed
+
+### `comfyui_user` volume → host-mount (`docker-compose.yml`, `docker-compose.dev.yml`)
+- `comfyui_user:/opt/ComfyUI/user` named volume replaced with `${COMFYUI_HOME}/user:/opt/ComfyUI/user` bind-mount
+- Workflow files placed in `~/claude-docker/comfyui/user/default/workflows/` are visible in ComfyUI web UI immediately without restarting the container
+- Install scripts now create `comfyui/user/default/workflows/` and seed `default.json` there on first install
+
+> **Migration:** `docker volume rm claude-docker_comfyui_user && mkdir -p ~/claude-docker/comfyui/user/default/workflows`

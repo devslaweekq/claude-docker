@@ -1,0 +1,499 @@
+{
+  "config": {},
+  "extra": {
+    "ds": {
+      "offset": [415.462890625, 110],
+      "scale": 0.9
+    }
+  },
+  "groups": [],
+  "id": "d0621fea-8e66-41bf-a97d-24ecd5692194",
+  "last_link_id": 83,
+  "last_node_id": 71,
+  "links": [
+    [73, 70, 0, 65, 0, "LATENT"],
+    [74, 63, 0, 65, 1, "VAE"],
+    [76, 67, 0, 70, 1, "CONDITIONING"],
+    [78, 68, 0, 70, 3, "LATENT"],
+    [79, 62, 0, 67, 0, "CLIP"],
+    [80, 65, 0, 9, 0, "IMAGE"],
+    [81, 62, 0, 71, 0, "CLIP"],
+    [82, 71, 0, 70, 2, "CONDITIONING"],
+    [83, 66, 0, 70, 0, "MODEL"]
+  ],
+  "nodes": [
+    {
+      "flags": {},
+      "id": 9,
+      "inputs": [
+        {
+          "link": 80,
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 9,
+      "outputs": [],
+      "pos": [1279.9999726783708, 319.9999392082668],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "SaveImage"
+      },
+      "size": [300, 420],
+      "type": "SaveImage",
+      "widgets_values": ["ComfyUI"]
+    },
+    {
+      "flags": {},
+      "id": 63,
+      "inputs": [
+        {
+          "link": null,
+          "localized_name": "vae_name",
+          "name": "vae_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "vae_name"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 0,
+      "outputs": [
+        {
+          "links": [74],
+          "localized_name": "VAE",
+          "name": "VAE",
+          "type": "VAE"
+        }
+      ],
+      "pos": [659.9998200904802, 699.9998629143215],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "models": [
+          {
+            "directory": "vae",
+            "name": "ae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors"
+          }
+        ],
+        "Node name for S&R": "VAELoader"
+      },
+      "size": [320, 106.65625],
+      "type": "VAELoader",
+      "widgets_values": ["ae.safetensors"]
+    },
+    {
+      "flags": {},
+      "id": 65,
+      "inputs": [
+        {
+          "link": 73,
+          "localized_name": "samples",
+          "name": "samples",
+          "type": "LATENT"
+        },
+        {
+          "link": 74,
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE"
+        }
+      ],
+      "mode": 0,
+      "order": 8,
+      "outputs": [
+        {
+          "links": [80],
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "slot_index": 0,
+          "type": "IMAGE"
+        }
+      ],
+      "pos": [1019.9998200904802, 319.9999392082668],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "VAEDecode"
+      },
+      "size": [225, 96],
+      "type": "VAEDecode",
+      "widgets_values": []
+    },
+    {
+      "flags": {},
+      "id": 68,
+      "inputs": [
+        {
+          "link": null,
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "batch_size",
+          "name": "batch_size",
+          "type": "INT",
+          "widget": {
+            "name": "batch_size"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 1,
+      "outputs": [
+        {
+          "links": [78],
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "slot_index": 0,
+          "type": "LATENT"
+        }
+      ],
+      "pos": [310.0000489723161, 700.0000155022121],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "EmptyLatentImage"
+      },
+      "size": [260, 168],
+      "type": "EmptyLatentImage",
+      "widgets_values": [1024, 1024, 1]
+    },
+    {
+      "flags": {},
+      "id": 70,
+      "inputs": [
+        {
+          "link": 83,
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL"
+        },
+        {
+          "link": 76,
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING"
+        },
+        {
+          "link": 82,
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING"
+        },
+        {
+          "link": 78,
+          "localized_name": "latent_image",
+          "name": "latent_image",
+          "type": "LATENT"
+        },
+        {
+          "link": null,
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "cfg",
+          "name": "cfg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "cfg"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler_name"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "scheduler",
+          "name": "scheduler",
+          "type": "COMBO",
+          "widget": {
+            "name": "scheduler"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "denoise",
+          "name": "denoise",
+          "type": "FLOAT",
+          "widget": {
+            "name": "denoise"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 7,
+      "outputs": [
+        {
+          "links": [73],
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "slot_index": 0,
+          "type": "LATENT"
+        }
+      ],
+      "pos": [659.9998200904802, 319.9999392082668],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "KSampler"
+      },
+      "size": [315, 341.3125],
+      "type": "KSampler",
+      "widgets_values": [42, "fixed", 6, 1, "euler", "sgm_uniform", 1]
+    },
+    {
+      "flags": {},
+      "id": 66,
+      "inputs": [
+        {
+          "link": null,
+          "localized_name": "unet_name",
+          "name": "unet_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "unet_name"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "weight_dtype",
+          "name": "weight_dtype",
+          "type": "COMBO",
+          "widget": {
+            "name": "weight_dtype"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 2,
+      "outputs": [
+        {
+          "links": [83],
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL"
+        }
+      ],
+      "pos": [-239.9999987113997, 110.00000596546897],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "models": [
+          {
+            "directory": "diffusion_models",
+            "name": "z_image_turbo_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors"
+          }
+        ],
+        "Node name for S&R": "UNETLoader"
+      },
+      "size": [380, 134.65625],
+      "type": "UNETLoader",
+      "widgets_values": ["z_image_turbo_bf16.safetensors", "default"]
+    },
+    {
+      "flags": {},
+      "id": 71,
+      "inputs": [
+        {
+          "link": 81,
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP"
+        },
+        {
+          "link": null,
+          "localized_name": "prompt",
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "auto_resize_images",
+          "name": "auto_resize_images",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "auto_resize_images"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 6,
+      "outputs": [
+        {
+          "links": [82],
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING"
+        }
+      ],
+      "pos": [170.00001082534345, 520.0000536491848],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "TextEncodeZImageOmni"
+      },
+      "size": [405.46875, 140],
+      "type": "TextEncodeZImageOmni",
+      "widgets_values": ["blurry, deformed, bad anatomy, extra limbs, watermark, text, ugly, low quality", true]
+    },
+    {
+      "flags": {},
+      "id": 62,
+      "inputs": [
+        {
+          "link": null,
+          "localized_name": "clip_name",
+          "name": "clip_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "clip_name"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "type",
+          "name": "type",
+          "type": "COMBO",
+          "widget": {
+            "name": "type"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "device",
+          "name": "device",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "device"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 3,
+      "outputs": [
+        {
+          "links": [79, 81],
+          "localized_name": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP"
+        }
+      ],
+      "pos": [-239.9999987113997, 420.0000536491848],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "models": [
+          {
+            "directory": "text_encoders",
+            "name": "qwen_3_4b.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors"
+          }
+        ],
+        "Node name for S&R": "CLIPLoader"
+      },
+      "size": [340, 169.3125],
+      "type": "CLIPLoader",
+      "widgets_values": ["qwen_3_4b.safetensors", "qwen_image", "default"]
+    },
+    {
+      "flags": {},
+      "id": 67,
+      "inputs": [
+        {
+          "link": 79,
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP"
+        },
+        {
+          "link": null,
+          "localized_name": "prompt",
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "auto_resize_images",
+          "name": "auto_resize_images",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "auto_resize_images"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 5,
+      "outputs": [
+        {
+          "links": [76],
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING"
+        }
+      ],
+      "pos": [170.00001082534345, 290.0000536491848],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "TextEncodeZImageOmni"
+      },
+      "size": [410, 160],
+      "type": "TextEncodeZImageOmni",
+      "widgets_values": [
+        "A beautiful young woman standing in a dense forest, holding a sable (small dark brown furry animal) gently in her hands, soft dappled sunlight filtering through the trees, photorealistic, detailed fur, warm natural lighting, cinematic, high quality",
+        true
+      ]
+    }
+  ],
+  "revision": 0,
+  "version": 0.4
+}

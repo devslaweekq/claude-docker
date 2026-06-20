@@ -17,7 +17,7 @@ RUN git clone https://github.com/Comfy-Org/ComfyUI ComfyUI \
     && cd ComfyUI && pip3 install --no-cache-dir -r requirements.txt
 
 RUN mkdir -p /opt/ComfyUI/user/default/workflows
-COPY workflows/z-image-turbo-txt2img.json /opt/ComfyUI/user/default/workflows/
+COPY workflows/default.json /opt/ComfyUI/user/default/workflows/
 
 WORKDIR /opt/ComfyUI
 EXPOSE 8188

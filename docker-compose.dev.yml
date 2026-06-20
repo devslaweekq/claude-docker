@@ -36,8 +36,5 @@ services:
     volumes:
       - ${COMFYUI_HOME}/models:/opt/ComfyUI/models
       - ${COMFYUI_HOME}/output:/opt/ComfyUI/output
-      - comfyui_user:/opt/ComfyUI/user
+      - ${COMFYUI_HOME}/user:/opt/ComfyUI/user
     restart: "no"
-
-volumes:
-  comfyui_user:
