@@ -36,10 +36,17 @@ jobs:
       - name: Build changelog body
         id: changelog
         run: |
+          before="${{ github.event.before }}"
+          if [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            files=$(ls changelog/*.md | grep -v README | sort)
+          else
+            files=$(git diff --name-only "$before" HEAD -- 'changelog/*.md' | grep -v README | sort)
+          fi
           body=""
-          for f in $(ls changelog/*.md | grep -v README | sort); do
-            body="$body$(cat "$f")"$'\n\n'
+          for f in $files; do
+            [ -f "$f" ] && body="$body$(cat "$f")"$'\n\n'
           done
+          if [ -z "$body" ]; then body="No changelog entries for this release."; fi
           {
             echo "BODY<<EOF"
             echo "$body"
