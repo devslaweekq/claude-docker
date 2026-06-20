@@ -1,0 +1,11 @@
+Package: claude-docker
+Version: VERSION_PLACEHOLDER
+Architecture: all
+Maintainer: devslaweekq
+Depends: curl
+Description: Isolated Claude Code in Docker
+ Runs Claude Code (Anthropic AI assistant) in an isolated Docker container
+ with persistent sessions, TLS support, and a project workspace mount.
+ .
+ On install Docker is set up automatically if absent, the image is pulled
+ from Docker Hub, and the launcher is added to PATH.

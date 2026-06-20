@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+case "$1" in
+  purge)
+    echo ""
+    echo "NOTE: ~/claude-docker (your sessions and .env) and the Docker image"
+    echo "      slaweekq/claude-docker:latest were NOT removed."
+    echo "      To clean up manually:"
+    echo "        rm -rf ~/claude-docker"
+    echo "        docker rmi slaweekq/claude-docker:latest"
+    echo ""
+    ;;
+esac

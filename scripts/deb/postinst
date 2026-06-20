@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SHARE=/usr/share/claude-docker
+REAL_USER="${SUDO_USER:-}"
+
+case "$1" in
+  configure)
+    # ── 1. Install Docker if not present ─────────────────────────────────────
+    if ! command -v docker >/dev/null 2>&1; then
+      echo "==> Installing Docker..."
+      apt-get update -qq
+      apt-get install -y curl
+      curl -fsSL https://get.docker.com | sh
+      systemctl enable --now docker || true
+    fi
+
+    if [ -n "$REAL_USER" ]; then
+      usermod -aG docker "$REAL_USER" || true
+      echo "    Note: re-login or run 'newgrp docker' for the group change to take effect."
+    fi
+
+    # ── 2. Install files to ~/claude-docker (mirrors install.sh) ─────────────
+    if [ -n "$REAL_USER" ]; then
+      INSTALL_DIR="/home/$REAL_USER/claude-docker"
+      LAUNCHER="$INSTALL_DIR/launcher"
+
+      echo "==> Installing claude-docker to $INSTALL_DIR"
+      sudo -u "$REAL_USER" mkdir -p "$INSTALL_DIR/home/scratch" "$INSTALL_DIR/certs"
+      chmod 700 "$INSTALL_DIR"
+
+      install -o "$REAL_USER" -m 755 "$SHARE/launcher"           "$INSTALL_DIR/launcher"
+      install -o "$REAL_USER" -m 644 "$SHARE/docker-compose.yml" "$INSTALL_DIR/docker-compose.yml"
+      install -o "$REAL_USER" -m 644 "$SHARE/.env.example"       "$INSTALL_DIR/.env.example"
+
+      if [ ! -f "$INSTALL_DIR/.env" ]; then
+        install -o "$REAL_USER" -m 600 "$SHARE/.env.example" "$INSTALL_DIR/.env"
+        echo "    Created $INSTALL_DIR/.env from .env.example"
+      else
+        echo "    Keeping existing $INSTALL_DIR/.env"
+      fi
+
+      # ── 3. Pull Docker image ──────────────────────────────────────────────
+      echo "==> Pulling Docker image slaweekq/claude-docker:latest"
+      if ! docker pull slaweekq/claude-docker:latest; then
+        echo "Warning: docker pull failed — the image will be fetched on first launcher run." >&2
+      fi
+
+      # ── 4. Add launcher to PATH ───────────────────────────────────────────
+      sudo -u "$REAL_USER" "$LAUNCHER" --install
+
+      cat <<EOF
+
+✓ Installation complete
+
+  Config directory:  $INSTALL_DIR
+  Launcher:          $LAUNCHER
+  Sessions / home:   $INSTALL_DIR/home
+  TLS certs:         $INSTALL_DIR/certs/
+
+Next step — edit $INSTALL_DIR/.env:
+  • PROJECT_DIR              — host folder mounted as /workspace
+  • CLAUDE_CODE_OAUTH_TOKEN  — from \`claude setup-token\`, or leave empty to /login inside
+
+EOF
+    fi
+    ;;
+esac

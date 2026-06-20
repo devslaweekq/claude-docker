@@ -8,6 +8,7 @@
   "type": "commonjs",
   "scripts": {
     "build": "bash scripts/build.sh",
+    "build:deb": "bash scripts/deb/build-deb.sh",
     "build:docker": "docker compose -f ./docker-compose.dev.yml build --build-arg HTTP_PROXY= --build-arg HTTPS_PROXY= --build-arg http_proxy= --build-arg https_proxy=",
     "format": "prettier -w .",
     "launcher": "./launcher",
