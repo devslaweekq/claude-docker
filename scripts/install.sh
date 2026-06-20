@@ -8,6 +8,41 @@ RAW_BASE="https://raw.githubusercontent.com/devslaweekq/claude-docker/main"
 INSTALL_DIR="$HOME/claude-docker"
 LAUNCHER="$INSTALL_DIR/launcher"
 
+case "$(uname -s)" in
+  Linux)
+    command -v curl >/dev/null 2>&1 || {
+      sudo apt-get update -qq
+      sudo apt-get install -y curl
+    }
+    command -v docker >/dev/null 2>&1 || {
+      curl -fsSL https://get.docker.com | sh
+      sudo systemctl enable --now docker || true
+      sudo usermod -aG docker "${SUDO_USER:-$(whoami)}" || true
+      echo "    Note: re-login or run 'newgrp docker'."
+    }
+    ;;
+  Darwin)
+    command -v curl >/dev/null 2>&1 || {
+      echo "Error: install Xcode Command Line Tools: xcode-select --install" >&2
+      exit 1
+    }
+    command -v docker >/dev/null 2>&1 || {
+      echo "Error: install Docker Desktop: https://docs.docker.com/desktop/mac/install/" >&2
+      exit 1
+    }
+    ;;
+  *)
+    command -v curl >/dev/null 2>&1 || {
+      echo "Error: curl not found, install it manually." >&2
+      exit 1
+    }
+    command -v docker >/dev/null 2>&1 || {
+      echo "Error: docker not found: https://docs.docker.com/engine/install/" >&2
+      exit 1
+    }
+    ;;
+esac
+
 download() {
   local rel="$1" dest="$2" mode="$3"
   curl -fsSL "$RAW_BASE/$rel" -o "$dest"
