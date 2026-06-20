@@ -47,7 +47,11 @@ case "$1" in
 
       # ── 3. Add launcher to PATH ───────────────────────────────────────────
       rm -f /tmp/claude-docker-chosen-cmd
-      sudo -u "$REAL_USER" "$LAUNCHER" --install
+      if [ -e /dev/tty ]; then
+        sudo -u "$REAL_USER" "$LAUNCHER" --install </dev/tty
+      else
+        echo "    No interactive terminal — run '$LAUNCHER --install' to add a PATH command"
+      fi
       chosen_cmd="$(cat /tmp/claude-docker-chosen-cmd 2>/dev/null || true)"
       rm -f /tmp/claude-docker-chosen-cmd
 

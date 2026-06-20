@@ -76,7 +76,11 @@ fi
 command -v docker >/dev/null 2>&1 || echo "Warning: docker not found — install Docker before running launcher." >&2
 
 rm -f /tmp/claude-docker-chosen-cmd
-"$LAUNCHER" --install
+if [ -e /dev/tty ]; then
+  "$LAUNCHER" --install </dev/tty
+else
+  echo "    No interactive terminal — run '$LAUNCHER --install' to add a PATH command"
+fi
 chosen_cmd="$(cat /tmp/claude-docker-chosen-cmd 2>/dev/null || true)"
 rm -f /tmp/claude-docker-chosen-cmd
 
