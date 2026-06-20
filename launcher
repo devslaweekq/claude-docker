@@ -74,6 +74,7 @@ EOF
 
   ln -sf "$LAUNCHER" "$HOME/.local/bin/$cmd"
   echo "OK: $HOME/.local/bin/$cmd -> $LAUNCHER"
+  echo "$cmd" > /tmp/claude-docker-chosen-cmd 2>/dev/null || true
   exit 0
 fi
 

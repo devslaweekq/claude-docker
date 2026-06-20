@@ -15,7 +15,7 @@ case "$1" in
       systemctl enable --now docker || true
     fi
 
-    if [ -n "$REAL_USER" ]; then
+    if [ -n "$REAL_USER" ] && ! id -nG "$REAL_USER" 2>/dev/null | grep -qw docker; then
       usermod -aG docker "$REAL_USER" || true
       echo "    Note: re-login or run 'newgrp docker' for the group change to take effect."
     fi
@@ -40,30 +40,22 @@ case "$1" in
         echo "    Keeping existing $INSTALL_DIR/.env"
       fi
 
-      # ── 3. Pull Docker image ──────────────────────────────────────────────
-      echo "==> Pulling Docker image slaweekq/claude-docker:latest"
-      if ! docker pull slaweekq/claude-docker:latest; then
-        echo "Warning: docker pull failed — the image will be fetched on first launcher run." >&2
-      fi
-
-      # ── 4. Add launcher to PATH ───────────────────────────────────────────
+      # ── 3. Add launcher to PATH ───────────────────────────────────────────
+      rm -f /tmp/claude-docker-chosen-cmd
       sudo -u "$REAL_USER" "$LAUNCHER" --install
+      chosen_cmd="$(cat /tmp/claude-docker-chosen-cmd 2>/dev/null || true)"
+      rm -f /tmp/claude-docker-chosen-cmd
 
       cat <<EOF
 
 ✓ Installation complete
 
-  Config directory:  $INSTALL_DIR
-  Launcher:          $LAUNCHER
-  Sessions / home:   $INSTALL_DIR/home
-  TLS certs:         $INSTALL_DIR/certs/
-
-Next step — edit $INSTALL_DIR/.env manually:
+Next step — edit $INSTALL_DIR/.env:
   • PROJECT_DIRS             — comma-separated host folders, each mounted as /workspace/<name>
                                e.g. PROJECT_DIRS=/home/user/work,/home/user/personal
   • CLAUDE_CODE_OAUTH_TOKEN  — from \`claude setup-token\`, or leave empty to /login inside
 
-Then run: claude (e.g. cladock) or:  $LAUNCHER
+Then run: ${chosen_cmd:-$LAUNCHER}
 
 EOF
     fi

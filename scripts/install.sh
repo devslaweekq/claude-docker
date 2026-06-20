@@ -70,31 +70,22 @@ else
   echo "    Keeping existing $INSTALL_DIR/.env"
 fi
 
-if command -v docker >/dev/null 2>&1; then
-  echo "==> Pulling Docker image slaweekq/claude-docker:latest"
-  if ! docker pull slaweekq/claude-docker:latest; then
-    echo "Warning: docker pull failed — the image will be fetched on first launcher run." >&2
-  fi
-else
-  echo "Warning: docker not found — install Docker before running launcher." >&2
-fi
+command -v docker >/dev/null 2>&1 || echo "Warning: docker not found — install Docker before running launcher." >&2
 
+rm -f /tmp/claude-docker-chosen-cmd
 "$LAUNCHER" --install
+chosen_cmd="$(cat /tmp/claude-docker-chosen-cmd 2>/dev/null || true)"
+rm -f /tmp/claude-docker-chosen-cmd
 
 cat <<EOF
 
 ✓ Installation complete
 
-  Config directory:  $INSTALL_DIR
-  Launcher:          $LAUNCHER
-  Sessions / home:   $INSTALL_DIR/home
-  TLS certs:         $INSTALL_DIR/certs/
-
-Next step — edit $INSTALL_DIR/.env manually:
+Next step — edit $INSTALL_DIR/.env:
   • PROJECT_DIRS             — comma-separated host folders, each mounted as /workspace/<name>
                                e.g. PROJECT_DIRS=/home/user/work,/home/user/personal
   • CLAUDE_CODE_OAUTH_TOKEN  — from \`claude setup-token\`, or leave empty to /login inside
 
-Then run: claude (e.g. cladock) or:  $LAUNCHER
+Then run: ${chosen_cmd:-$LAUNCHER}
 
 EOF
