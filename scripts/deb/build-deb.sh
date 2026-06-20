@@ -16,7 +16,7 @@ OUT="$REPO/dist"
 echo "==> Building $PKG.deb"
 
 rm -rf "$BUILD"
-mkdir -p "$BUILD/DEBIAN" "$BUILD/usr/share/claude-docker"
+mkdir -p "$BUILD/DEBIAN" "$BUILD/usr/share/claude-docker/workflows"
 
 # Control files
 sed "s/VERSION_PLACEHOLDER/$VERSION/" scripts/deb/control > "$BUILD/DEBIAN/control"
@@ -24,9 +24,10 @@ install -m 755 scripts/deb/postinst "$BUILD/DEBIAN/postinst"
 install -m 755 scripts/deb/postrm   "$BUILD/DEBIAN/postrm"
 
 # Data files — taken directly from repo root, no duplication
-install -m 755 launcher           "$BUILD/usr/share/claude-docker/launcher"
-install -m 644 docker-compose.yml "$BUILD/usr/share/claude-docker/docker-compose.yml"
-install -m 644 .env.example       "$BUILD/usr/share/claude-docker/.env.example"
+install -m 755 launcher                       "$BUILD/usr/share/claude-docker/launcher"
+install -m 644 docker-compose.yml             "$BUILD/usr/share/claude-docker/docker-compose.yml"
+install -m 644 .env.example                   "$BUILD/usr/share/claude-docker/.env.example"
+install -m 644 comfyui/workflows/default.json "$BUILD/usr/share/claude-docker/workflows/default.json"
 mkdir -p "$OUT"
 dpkg-deb --root-owner-group --build "$BUILD" "$OUT/${PKG}.deb"
 

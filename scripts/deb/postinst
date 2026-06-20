@@ -37,6 +37,10 @@ case "$1" in
       install -o "$REAL_USER" -m 755 "$SHARE/launcher"           "$INSTALL_DIR/launcher"
       install -o "$REAL_USER" -m 644 "$SHARE/docker-compose.yml" "$INSTALL_DIR/docker-compose.yml"
       install -o "$REAL_USER" -m 644 "$SHARE/.env.example"       "$INSTALL_DIR/.env.example"
+      if [ ! -f "$INSTALL_DIR/comfyui/user/default/workflows/default.json" ]; then
+        install -o "$REAL_USER" -m 644 "$SHARE/workflows/default.json" \
+          "$INSTALL_DIR/comfyui/user/default/workflows/default.json"
+      fi
 
       if [ ! -f "$INSTALL_DIR/.env" ]; then
         install -o "$REAL_USER" -m 600 "$SHARE/.env.example" "$INSTALL_DIR/.env"
