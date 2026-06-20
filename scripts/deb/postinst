@@ -30,19 +30,12 @@ case "$1" in
         "$INSTALL_DIR/home/scratch" \
         "$INSTALL_DIR/certs" \
         "$INSTALL_DIR/comfyui/models" \
-        "$INSTALL_DIR/comfyui/output" \
-        "$INSTALL_DIR/comfyui/user/default/workflows"
+        "$INSTALL_DIR/comfyui/output"
       chmod 700 "$INSTALL_DIR"
 
       install -o "$REAL_USER" -m 755 "$SHARE/launcher"           "$INSTALL_DIR/launcher"
       install -o "$REAL_USER" -m 644 "$SHARE/docker-compose.yml" "$INSTALL_DIR/docker-compose.yml"
       install -o "$REAL_USER" -m 644 "$SHARE/.env.example"       "$INSTALL_DIR/.env.example"
-
-      if [ -f "$SHARE/workflows/z-image-turbo-txt2img.json" ]; then
-        install -o "$REAL_USER" -m 644 \
-          "$SHARE/workflows/z-image-turbo-txt2img.json" \
-          "$INSTALL_DIR/comfyui/user/default/workflows/z-image-turbo-txt2img.json"
-      fi
 
       if [ ! -f "$INSTALL_DIR/.env" ]; then
         install -o "$REAL_USER" -m 600 "$SHARE/.env.example" "$INSTALL_DIR/.env"

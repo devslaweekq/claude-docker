@@ -12,6 +12,7 @@ certs/*.key
 # Windows: generated icon/shortcut
 claude.ico
 .claude/worktrees
+**/.fuse_*
 *.lnk
 
 .omc

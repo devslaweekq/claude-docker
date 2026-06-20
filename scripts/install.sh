@@ -54,14 +54,12 @@ echo "==> Installing claude-docker to $INSTALL_DIR"
 [ -d "$INSTALL_DIR/certs" ] || mkdir -p "$INSTALL_DIR/certs"
 [ -d "$INSTALL_DIR/comfyui/models" ] || mkdir -p "$INSTALL_DIR/comfyui/models"
 [ -d "$INSTALL_DIR/comfyui/output" ] || mkdir -p "$INSTALL_DIR/comfyui/output"
-[ -d "$INSTALL_DIR/comfyui/user/default/workflows" ] || mkdir -p "$INSTALL_DIR/comfyui/user/default/workflows"
 chmod 700 "$INSTALL_DIR"
 
 echo "==> Downloading launcher and config"
 download launcher "$LAUNCHER" 755
 download docker-compose.yml "$INSTALL_DIR/docker-compose.yml" 644
 download .env.example "$INSTALL_DIR/.env.example" 644
-download workflows/z-image-turbo-txt2img.json "$INSTALL_DIR/comfyui/user/default/workflows/z-image-turbo-txt2img.json" 644
 if curl -fsSL "$RAW_BASE/certs/README.md" -o "$INSTALL_DIR/certs/README.md" 2>/dev/null; then
   chmod 644 "$INSTALL_DIR/certs/README.md"
 fi

@@ -61,13 +61,14 @@ First run pulls the image from Docker Hub automatically.
 
 ### Commands
 
-| Command                     | Action                                                         |
-| --------------------------- | -------------------------------------------------------------- |
-| `./launcher`                | Start a session                                                |
-| `./launcher --pull`         | Pull the latest image, then start                              |
-| `./launcher --build`        | Build the image locally (maintainers)                          |
-| `./launcher --install`      | Add a command to your PATH                                     |
-| `./launcher <claude args…>` | Passthrough — run `claude <args…>` in the container, then exit |
+| Command                     | Action                                                          |
+| --------------------------- | --------------------------------------------------------------- |
+| `./launcher`                | Start a session                                                 |
+| `./launcher --pull`         | Pull the latest image, then start                               |
+| `./launcher --build`        | Build the image locally (maintainers)                           |
+| `./launcher --comfyui`      | Start ComfyUI (Docker, GPU) before the session, stop it on exit |
+| `./launcher --install`      | Add a command to your PATH                                      |
+| `./launcher <claude args…>` | Passthrough — run `claude <args…>` in the container, then exit  |
 
 #### Passthrough
 
@@ -166,6 +167,43 @@ If you use a **TLS proxy with a self-signed certificate**, add the certs volume:
 
 ---
 
+## ComfyUI — AI image generation
+
+Run [ComfyUI](https://github.com/Comfy-Org/ComfyUI) locally in Docker with GPU acceleration alongside Claude Code. The `comfyui-mcp` server is pre-configured in every session so Claude can generate images directly.
+
+### Requirements
+
+- NVIDIA GPU + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
+- `slaweekq/comfyui:latest` image (pulled automatically on first `--comfyui` run)
+
+### Start
+
+```bash
+./launcher --comfyui
+```
+
+Claude will have access to ComfyUI at `http://localhost:8188` via MCP. The web UI is also available in your browser.
+
+### Models
+
+Place model files in `~/claude-docker/comfyui/models/` — subdirectories mirror the ComfyUI layout:
+
+```
+~/claude-docker/comfyui/
+├── models/
+│   ├── checkpoints/
+│   ├── clip/           # e.g. qwen_3_4b.safetensors
+│   ├── unet/           # e.g. z_image_turbo_bf16.safetensors
+│   └── vae/            # e.g. ae.safetensors
+└── output/             # generated images
+```
+
+Generated images are saved to `~/claude-docker/comfyui/output/`.
+
+A bundled **Z-Image Turbo** txt2img workflow is available in the ComfyUI web UI out of the box (baked into the image).
+
+---
+
 ## Authentication
 
 | Method                              | When to use                                          |
@@ -195,15 +233,16 @@ Tokens last about one year.
 
 Claude Code, `git`, `gh` (GitHub CLI), `fzf`, `bun`, DB clients (`psql`, `mysql`, `redis-cli`), and these MCP servers pre-configured:
 
-| MCP server | What it connects to                        |
-| ---------- | ------------------------------------------ |
-| github     | GitHub (requires `GH_TOKEN`)               |
-| playwright | Browser automation                         |
-| context7   | Library docs (requires `CONTEXT7_API_KEY`) |
-| figma      | Figma designs                              |
-| atlassian  | Jira (requires `JIRA_*` vars)              |
-| kubernetes | Kubernetes cluster (read-only)             |
-| sentry     | Sentry error tracking                      |
+| MCP server | What it connects to                                       |
+| ---------- | --------------------------------------------------------- |
+| comfyui    | Local ComfyUI server at localhost:8188 (`--comfyui` flag) |
+| github     | GitHub (requires `GH_TOKEN`)                              |
+| playwright | Browser automation                                        |
+| context7   | Library docs (requires `CONTEXT7_API_KEY`)                |
+| figma      | Figma designs                                             |
+| atlassian  | Jira (requires `JIRA_*` vars)                             |
+| kubernetes | Kubernetes cluster (read-only)                            |
+| sentry     | Sentry error tracking                                     |
 
 Plugins pre-installed: [superpowers](https://github.com/anthropics/claude-code-superpowers), [claude-mem](https://github.com/thedotmack/claude-mem).
 
@@ -262,11 +301,20 @@ Alternatively, double-click [`launcher.bat`](launcher.bat) from the cloned repo 
 <summary>For maintainers</summary>
 
 ```bash
-npm run build    # docker buildx build + registry cache
-npm run push     # build and push to Docker Hub
-npm run launcher   # ./launcher
+# Build locally (--load into local daemon)
+npm run build:claude    # claude-docker image
+npm run build:comfyui   # comfyui image
+npm run build           # both
+
+# Build and push to Docker Hub
+npm run push:claude     # slaweekq/claude-docker:latest
+npm run push:comfyui    # slaweekq/comfyui:latest
+npm run push            # both
+
+npm run build:deb       # build .deb package
+npm run launcher        # ./launcher
 ```
 
-See [`scripts/build.sh`](scripts/build.sh) and [`scripts/push.sh`](scripts/push.sh).
+See [`scripts/docker/build.sh`](scripts/docker/build.sh) and [`scripts/docker/push.sh`](scripts/docker/push.sh).
 
 </details>

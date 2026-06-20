@@ -7,7 +7,7 @@ services:
     network_mode: host # reuse host network (Tailscale) for access to DB
     stdin_open: true # -i
     tty: true # -t  (interactive claude console)
-    user: '0:0' # update-ca-certificates needs root; claude-launch runs as node (update-certs.sh in image)
+    user: "0:0" # update-ca-certificates needs root; claude-launch runs as node (update-certs.sh in image)
     env_file:
       - ./.env # secrets + settings (token, proxy, PROJECT_DIRS, GH_TOKEN)
     volumes:
@@ -16,3 +16,28 @@ services:
       # TLS proxy CA(s) — same as old Dockerfile COPY certs/, applied at start
       - ./certs:/tmp/certs-input:ro
       # /workspace/<name> mounts are passed dynamically by the launcher via -v flags (PROJECT_DIRS)
+
+  comfyui:
+    build:
+      context: ./comfyui
+    image: slaweekq/comfyui:latest
+    labels:
+      - claude-docker.role=comfyui
+    profiles:
+      - comfyui
+    network_mode: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - ${COMFYUI_HOME}/models:/opt/ComfyUI/models
+      - ${COMFYUI_HOME}/output:/opt/ComfyUI/output
+      - comfyui_user:/opt/ComfyUI/user
+    restart: "no"
+
+volumes:
+  comfyui_user:

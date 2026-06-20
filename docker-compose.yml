@@ -16,7 +16,7 @@ services:
       # /workspace/<name> mounts are passed dynamically by the launcher via -v flags (PROJECT_DIRS)
 
   comfyui:
-    image: yanwk/comfyui-boot:latest
+    image: slaweekq/comfyui:latest
     labels:
       - claude-docker.role=comfyui
     profiles:
@@ -30,7 +30,10 @@ services:
               count: all
               capabilities: [gpu]
     volumes:
-      - ${COMFYUI_HOME}/models:/root/ComfyUI/models
-      - ${COMFYUI_HOME}/output:/root/ComfyUI/output
-      - ${COMFYUI_HOME}/user:/root/ComfyUI/user
+      - ${COMFYUI_HOME}/models:/opt/ComfyUI/models
+      - ${COMFYUI_HOME}/output:/opt/ComfyUI/output
+      - comfyui_user:/opt/ComfyUI/user
     restart: 'no'
+
+volumes:
+  comfyui_user:
