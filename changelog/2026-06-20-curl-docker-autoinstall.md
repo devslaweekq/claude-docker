@@ -1,10 +1,9 @@
 # 2026-06-20 — Auto-install curl and Docker in install.sh
 
 ## Added
-- `scripts/install.sh` now checks for `curl` and `docker` at startup and
-  installs them automatically if missing:
-  - **Linux** — `curl` is installed via `apt-get`; `docker` is installed via
-    the official `get.docker.com` script, the daemon is enabled with
-    `systemctl`, and the current user is added to the `docker` group.
-  - **macOS** — exits with a human-readable hint if either tool is absent.
+- `scripts/install.sh` checks for `curl` and `docker` at startup and installs
+  them automatically when missing:
+  - **Linux** — `curl` via `apt-get`; `docker` via the official `get.docker.com`
+    script, daemon enabled with `systemctl`, user added to the `docker` group.
+  - **macOS** — exits with a human-readable hint for each missing tool.
   - **Other OS** — exits with an error.
