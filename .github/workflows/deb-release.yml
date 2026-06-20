@@ -35,15 +35,15 @@ jobs:
       - name: Build deb
         run: npm run build:deb
 
-      - name: Build changelog body
-        id: changelog
+      - name: Build changelogs body
+        id: changelogs
         run: |
-          files=$(git diff --name-only HEAD~1 HEAD -- 'changelog/*.md' | grep -v README | sort)
+          files=$(git diff --name-only HEAD~1 HEAD -- 'changelogs/*.md' | grep -v README | sort)
           body=""
           for f in $files; do
             [ -f "$f" ] && body="$body$(cat "$f")"$'\n\n'
           done
-          if [ -z "$body" ]; then body="No changelog entries for this release."; fi
+          if [ -z "$body" ]; then body="No changelogs entries for this release."; fi
           {
             echo "BODY<<EOF"
             echo "$body"
@@ -55,5 +55,5 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.VERSION }}
           name: v${{ steps.version.outputs.VERSION }}
-          body: ${{ steps.changelog.outputs.BODY }}
+          body: ${{ steps.changelogs.outputs.BODY }}
           files: dist/claude-docker_${{ steps.version.outputs.VERSION }}_all.deb
