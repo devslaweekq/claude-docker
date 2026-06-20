@@ -21,6 +21,12 @@ if [ ! -f "$HOME/.claude/settings.json" ] && [ -f "$DEF/settings.json" ]; then
   cp "$DEF/settings.json" "$HOME/.claude/settings.json"
 fi
 
+# slash commands: copy any shipped command not already present (never clobber user edits)
+if [ -d "$DEF/commands" ]; then
+[ -d "$HOME/.claude/commands" ] || mkdir -p "$HOME/.claude/commands"
+  cp -n "$DEF/commands/"*.md "$HOME/.claude/commands/" 2>/dev/null || true
+fi
+
 if [ -f "$DEF/mcp.json" ]; then
   [ -f "$HOME/.claude.json" ] || echo '{}' > "$HOME/.claude.json"
   tmp="$(mktemp)"
