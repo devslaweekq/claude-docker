@@ -7,7 +7,7 @@
 #   bash scripts/docker/build.sh --all       # build both
 
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 TARGET="${1:-}"
 if [ -z "$TARGET" ]; then
