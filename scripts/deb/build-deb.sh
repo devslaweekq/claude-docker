@@ -27,6 +27,9 @@ install -m 755 scripts/deb/postrm   "$BUILD/DEBIAN/postrm"
 install -m 755 launcher           "$BUILD/usr/share/claude-docker/launcher"
 install -m 644 docker-compose.yml "$BUILD/usr/share/claude-docker/docker-compose.yml"
 install -m 644 .env.example       "$BUILD/usr/share/claude-docker/.env.example"
+mkdir -p "$BUILD/usr/share/claude-docker/workflows"
+install -m 644 workflows/z-image-turbo-txt2img.json \
+  "$BUILD/usr/share/claude-docker/workflows/z-image-turbo-txt2img.json"
 
 mkdir -p "$OUT"
 dpkg-deb --root-owner-group --build "$BUILD" "$OUT/${PKG}.deb"

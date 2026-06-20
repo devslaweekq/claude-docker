@@ -5,6 +5,7 @@
 #                         outside all PROJECT_DIRS (or unset) -> full menu (caller cwd mounted as scratch)
 #   launcher --build    — local docker compose build (test changes, no push)
 #   launcher --pull     — pull latest image from Docker Hub, then start
+#   launcher --comfyui  — start ComfyUI Docker service before session, stop it on exit
 #   launcher --install  — add launcher to PATH (auto claude, or pick name if claude exists)
 #   launcher <args…>    — passthrough: run `claude <args…>` in the container, then exit
 #                         (e.g. `claude auth status`, `claude login`, `claude setup-token`)
@@ -83,6 +84,8 @@ cd "$REPO"
 CLAUDE_HOME="${CLAUDE_HOME:-$HOME/claude-docker/home}"
 [ -d "$CLAUDE_HOME/scratch" ] || mkdir -p "$CLAUDE_HOME/scratch"
 export CLAUDE_HOME
+COMFYUI_HOME="${COMFYUI_HOME:-$(dirname "$CLAUDE_HOME")/comfyui}"
+export COMFYUI_HOME
 
 if [ ! -f .env ]; then
   echo "Missing .env — copy .env.example, set PROJECT_DIRS, then retry:" >&2
@@ -92,12 +95,14 @@ fi
 
 force_pull=0
 force_build=0
+start_comfyui=0
 passthrough_args=()                           # claude args forwarded into the container (claude auth status, login, …)
 
 for a in "$@"; do
   case "$a" in
     --pull)     force_pull=1 ;;
     --build)    force_build=1 ;;
+    --comfyui)  start_comfyui=1 ;;
     *)          passthrough_args+=("$a") ;;
   esac
 done
@@ -160,6 +165,31 @@ if [ "$force_build" -eq 1 ]; then
     --build-arg http_proxy= --build-arg https_proxy=
 fi
 
+# ComfyUI: start Docker service on --comfyui (only for interactive sessions, not passthrough)
+comfyui_started=0
+if [ "$start_comfyui" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
+  if curl -sf http://localhost:8188/system_stats >/dev/null 2>&1; then
+    echo "==> ComfyUI already running at localhost:8188 — skipping start"
+  else
+    echo "==> Starting ComfyUI Docker service…"
+    docker compose -f ./docker-compose.yml --profile comfyui up -d comfyui
+    comfyui_started=1
+    for _i in $(seq 1 60); do
+      curl -sf http://localhost:8188/system_stats >/dev/null 2>&1 && break
+      sleep 2
+    done
+    echo "    ComfyUI ready at localhost:8188"
+  fi
+fi
+
+_cleanup_comfyui() {
+  if [ "$comfyui_started" -eq 1 ]; then
+    echo "==> Stopping ComfyUI Docker service…"
+    docker compose -f ./docker-compose.yml stop comfyui 2>/dev/null || true
+  fi
+}
+trap _cleanup_comfyui EXIT
+
 # Passthrough: forward any unrecognized args straight to `claude` in a throwaway container,
 # then exit with claude's status. Reserved flags (--install/--pull/--build) never reach here.
 # Allocate a TTY only when stdin+stdout are terminals (interactive `claude login`);
@@ -171,4 +201,9 @@ if [ ${#passthrough_args[@]} -gt 0 ]; then
     --label claude-docker.role=exec claude --exec "${passthrough_args[@]}"
 fi
 
-exec docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" claude "${mode_arg[@]}"
+if [ "$comfyui_started" -eq 1 ]; then
+  # Without exec so the shell survives to run the EXIT trap (stops ComfyUI on session end)
+  docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" claude "${mode_arg[@]}"
+else
+  exec docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" claude "${mode_arg[@]}"
+fi

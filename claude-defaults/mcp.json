@@ -9,6 +9,14 @@
       "type": "http",
       "url": "https://mcp.atlassian.com/v1/mcp"
     },
+    "comfyui": {
+      "args": ["-y", "comfyui-mcp"],
+      "command": "npx",
+      "env": {
+        "COMFYUI_URL": "http://localhost:8188"
+      },
+      "type": "stdio"
+    },
     "context7": {
       "headers": {
         "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:-}"

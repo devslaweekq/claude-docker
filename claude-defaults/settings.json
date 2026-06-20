@@ -16,6 +16,7 @@
   "gitAttribution": true,
   "includeCoAuthoredBy": false,
   "permissions": {
+    "allow": ["Read(.env.example)"],
     "defaultMode": "auto",
     "deny": [
       "Read(.env*)",
