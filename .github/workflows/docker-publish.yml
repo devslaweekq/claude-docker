@@ -9,6 +9,13 @@ name: Docker Publish
 on:
   push:
     branches: [main, master]
+    paths:
+      - Dockerfile
+      - scripts/update-certs.sh
+      - scripts/ensure-claude-cli.sh
+      - scripts/menu.sh
+      - scripts/sessions.js
+      - claude-defaults/**
   workflow_dispatch:
 
 jobs:
