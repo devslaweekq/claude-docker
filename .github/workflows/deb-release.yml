@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
 
       - name: Get version
         id: version
@@ -36,12 +38,7 @@ jobs:
       - name: Build changelog body
         id: changelog
         run: |
-          before="${{ github.event.before }}"
-          if [ "$before" = "0000000000000000000000000000000000000000" ]; then
-            files=$(ls changelog/*.md | grep -v README | sort)
-          else
-            files=$(git diff --name-only "$before" HEAD -- 'changelog/*.md' | grep -v README | sort)
-          fi
+          files=$(git diff --name-only HEAD~1 HEAD -- 'changelog/*.md' | grep -v README | sort)
           body=""
           for f in $files; do
             [ -f "$f" ] && body="$body$(cat "$f")"$'\n\n'
@@ -54,7 +51,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.version.outputs.VERSION }}
           name: v${{ steps.version.outputs.VERSION }}
