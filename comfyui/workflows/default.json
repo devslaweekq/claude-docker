@@ -43,7 +43,7 @@
         }
       ],
       "mode": 0,
-      "order": 9,
+      "order": 8,
       "outputs": [],
       "pos": [1279.9999726783708, 319.9999392082668],
       "properties": {
@@ -112,7 +112,7 @@
         }
       ],
       "mode": 0,
-      "order": 8,
+      "order": 7,
       "outputs": [
         {
           "links": [80],
@@ -130,58 +130,6 @@
       "size": [225, 96],
       "type": "VAEDecode",
       "widgets_values": []
-    },
-    {
-      "flags": {},
-      "id": 68,
-      "inputs": [
-        {
-          "link": null,
-          "localized_name": "width",
-          "name": "width",
-          "type": "INT",
-          "widget": {
-            "name": "width"
-          }
-        },
-        {
-          "link": null,
-          "localized_name": "height",
-          "name": "height",
-          "type": "INT",
-          "widget": {
-            "name": "height"
-          }
-        },
-        {
-          "link": null,
-          "localized_name": "batch_size",
-          "name": "batch_size",
-          "type": "INT",
-          "widget": {
-            "name": "batch_size"
-          }
-        }
-      ],
-      "mode": 0,
-      "order": 1,
-      "outputs": [
-        {
-          "links": [78],
-          "localized_name": "LATENT",
-          "name": "LATENT",
-          "slot_index": 0,
-          "type": "LATENT"
-        }
-      ],
-      "pos": [310.0000489723161, 700.0000155022121],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "Node name for S&R": "EmptyLatentImage"
-      },
-      "size": [260, 168],
-      "type": "EmptyLatentImage",
-      "widgets_values": [1024, 1024, 1]
     },
     {
       "flags": {},
@@ -267,7 +215,7 @@
         }
       ],
       "mode": 0,
-      "order": 7,
+      "order": 6,
       "outputs": [
         {
           "links": [73],
@@ -310,7 +258,7 @@
         }
       ],
       "mode": 0,
-      "order": 2,
+      "order": 1,
       "outputs": [
         {
           "links": [83],
@@ -334,54 +282,6 @@
       "size": [380, 134.65625],
       "type": "UNETLoader",
       "widgets_values": ["z_image_turbo_bf16.safetensors", "default"]
-    },
-    {
-      "flags": {},
-      "id": 71,
-      "inputs": [
-        {
-          "link": 81,
-          "localized_name": "clip",
-          "name": "clip",
-          "type": "CLIP"
-        },
-        {
-          "link": null,
-          "localized_name": "prompt",
-          "name": "prompt",
-          "type": "STRING",
-          "widget": {
-            "name": "prompt"
-          }
-        },
-        {
-          "link": null,
-          "localized_name": "auto_resize_images",
-          "name": "auto_resize_images",
-          "type": "BOOLEAN",
-          "widget": {
-            "name": "auto_resize_images"
-          }
-        }
-      ],
-      "mode": 0,
-      "order": 6,
-      "outputs": [
-        {
-          "links": [82],
-          "localized_name": "CONDITIONING",
-          "name": "CONDITIONING",
-          "type": "CONDITIONING"
-        }
-      ],
-      "pos": [170.00001082534345, 520.0000536491848],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "Node name for S&R": "TextEncodeZImageOmni"
-      },
-      "size": [405.46875, 140],
-      "type": "TextEncodeZImageOmni",
-      "widgets_values": ["blurry, deformed, bad anatomy, extra limbs, watermark, text, ugly, low quality", true]
     },
     {
       "flags": {},
@@ -417,7 +317,7 @@
         }
       ],
       "mode": 0,
-      "order": 3,
+      "order": 2,
       "outputs": [
         {
           "links": [79, 81],
@@ -444,13 +344,100 @@
     },
     {
       "flags": {},
-      "id": 67,
+      "id": 68,
       "inputs": [
         {
-          "link": 79,
+          "link": null,
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "batch_size",
+          "name": "batch_size",
+          "type": "INT",
+          "widget": {
+            "name": "batch_size"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 3,
+      "outputs": [
+        {
+          "links": [78],
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "slot_index": 0,
+          "type": "LATENT"
+        }
+      ],
+      "pos": [287.2461427223163, 782.5086960577677],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "EmptyLatentImage"
+      },
+      "size": [260, 168],
+      "type": "EmptyLatentImage",
+      "widgets_values": [1024, 1024, 1]
+    },
+    {
+      "flags": {},
+      "id": 71,
+      "inputs": [
+        {
+          "link": 81,
           "localized_name": "clip",
           "name": "clip",
           "type": "CLIP"
+        },
+        {
+          "link": null,
+          "localized_name": "image_encoder",
+          "name": "image_encoder",
+          "shape": 7,
+          "type": "CLIP_VISION"
+        },
+        {
+          "link": null,
+          "localized_name": "vae",
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE"
+        },
+        {
+          "link": null,
+          "localized_name": "image1",
+          "name": "image1",
+          "shape": 7,
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "image2",
+          "name": "image2",
+          "shape": 7,
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "image3",
+          "name": "image3",
+          "shape": 7,
+          "type": "IMAGE"
         },
         {
           "link": null,
@@ -475,18 +462,101 @@
       "order": 5,
       "outputs": [
         {
+          "links": [82],
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING"
+        }
+      ],
+      "pos": [170.00001082534345, 520.0000536491848],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "TextEncodeZImageOmni"
+      },
+      "size": [405.46875, 212],
+      "type": "TextEncodeZImageOmni",
+      "widgets_values": ["blurry, deformed, bad anatomy, extra limbs, watermark, text, ugly, low quality", true]
+    },
+    {
+      "flags": {},
+      "id": 67,
+      "inputs": [
+        {
+          "link": 79,
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP"
+        },
+        {
+          "link": null,
+          "localized_name": "image_encoder",
+          "name": "image_encoder",
+          "shape": 7,
+          "type": "CLIP_VISION"
+        },
+        {
+          "link": null,
+          "localized_name": "vae",
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE"
+        },
+        {
+          "link": null,
+          "localized_name": "image1",
+          "name": "image1",
+          "shape": 7,
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "image2",
+          "name": "image2",
+          "shape": 7,
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "image3",
+          "name": "image3",
+          "shape": 7,
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "prompt",
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "auto_resize_images",
+          "name": "auto_resize_images",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "auto_resize_images"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 4,
+      "outputs": [
+        {
           "links": [76],
           "localized_name": "CONDITIONING",
           "name": "CONDITIONING",
           "type": "CONDITIONING"
         }
       ],
-      "pos": [170.00001082534345, 290.0000536491848],
+      "pos": [171.063378880899, 246.46164219085148],
       "properties": {
         "cnr_id": "comfy-core",
         "Node name for S&R": "TextEncodeZImageOmni"
       },
-      "size": [410, 160],
+      "size": [410, 212],
       "type": "TextEncodeZImageOmni",
       "widgets_values": [
         "A beautiful young woman standing in a dense forest, holding a sable (small dark brown furry animal) gently in her hands, soft dappled sunlight filtering through the trees, photorealistic, detailed fur, warm natural lighting, cinematic, high quality",

@@ -1,4 +1,6 @@
-# Claude Docker
+<p align="center">
+  <img src="assets/banner.png" alt="claude-docker" width="100%"/>
+</p>
 
 Run [Claude Code](https://docs.anthropic.com/en/docs/claude-code) in an isolated Docker container — your workspace mounted inside, persistent sessions, an fzf menu with resume, and optional corporate proxy support.
 

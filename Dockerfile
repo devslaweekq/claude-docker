@@ -18,7 +18,7 @@ RUN install -m 0755 -d /etc/apt/keyrings \
  && rm -rf /var/lib/apt/lists/*
 
 # Claude Code in /usr/local — image seed; runtime prefers ~/.npm-global (writable, on volume).
-RUN npm install -g @anthropic-ai/claude-code@latest \
+RUN npm install -g @anthropic-ai/claude-code@latest jimp \
  && npm cache clean --force \
  && mkdir -p /home/node/.claude /home/node/.npm-global /workspace \
  && chown -R node:node /home/node /workspace
