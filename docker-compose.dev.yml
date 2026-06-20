@@ -9,11 +9,10 @@ services:
     tty: true # -t  (interactive claude console)
     user: '0:0' # update-ca-certificates needs root; claude-launch runs as node (update-certs.sh in image)
     env_file:
-      - ./.env # secrets + settings (token, proxy, PROJECT_DIR, GH_TOKEN)
+      - ./.env # secrets + settings (token, proxy, PROJECT_DIRS, GH_TOKEN)
     volumes:
-      # workspace folder (visible as /workspace); path set in .env via PROJECT_DIR
-      - ${PROJECT_DIR}:/workspace
       # persistent Claude home on host (~/claude-docker/home)
       - ${CLAUDE_HOME}:/home/node
       # TLS proxy CA(s) — same as old Dockerfile COPY certs/, applied at start
       - ./certs:/tmp/certs-input:ro
+      # /workspace/<name> mounts are passed dynamically by the launcher via -v flags (PROJECT_DIRS)

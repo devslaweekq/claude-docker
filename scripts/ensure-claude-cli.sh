@@ -3,7 +3,7 @@
 set -euo pipefail
 
 export NPM_CONFIG_PREFIX="${NPM_CONFIG_PREFIX:-$HOME/.npm-global}"
-[ -d "$NPM_CONFIG_PREFIX"] || mkdir -p "$NPM_CONFIG_PREFIX"
+[ -d "$NPM_CONFIG_PREFIX" ] || mkdir -p "$NPM_CONFIG_PREFIX"
 export PATH="$NPM_CONFIG_PREFIX/bin${PATH:+:$PATH}"
 
 if [ ! -x "$NPM_CONFIG_PREFIX/bin/claude" ]; then

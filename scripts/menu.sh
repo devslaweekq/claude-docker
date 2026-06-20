@@ -45,11 +45,19 @@ SCRATCH_DIR="$HOME/scratch"
 O=$'\033[38;5;208m'; B=$'\033[1m'; D=$'\033[2m'; R=$'\033[0m'   # orange / bold / dim / reset
 
 print_header() {
-  printf '\033c'
-  printf '\n'
-  printf '   %s╭─────────────╮%s      %sClaude Docker%s\n' "$O" "$R" "$B" "$R"
-  printf '   %s│ %s%s%s │%s   %s isolated Claude Code in Docker%s\n' "$O" "$B" 'devslaweekq' "$O" "$R" "$D" "$R"
-  printf '   %s╰─────────────╯%s\n\n' "$O" "$R"
+  printf '\033c\n'
+  printf '   %s╭────────────────────────────────╮%s\n' "$O" "$R"
+  printf '   %s│ %sClaude Docker%s                  │%s\n' "$O" "$B" "$O" "$R"
+  printf '   %s│ %sisolated Claude Code in Docker%s%s │%s\n' "$O" "$D" "$R" "$O" "$R"
+  printf '   %s│ %st.me/slaweekq%s%s                  │%s\n' "$O" "$D" "$R" "$O" "$R"
+  printf '   %s╰────────────────────────────────╯%s\n\n' "$O" "$R"
+}
+
+# Shown in the menu when /workspace has no project dirs (PROJECT_DIRS unset, or its parents have no subdirs).
+no_projects_hint() {
+  [ ${#dirs[@]} -eq 0 ] || return 0
+  printf '   %sNo projects in /workspace — set PROJECT_DIRS in .env to mount them.%s\n' "$D" "$R"
+  printf '   %sScratch and bash still work below.%s\n\n' "$D" "$R"
 }
 
 # full terminal reset before/after claude (RIS — no ncurses/reset dependency)
@@ -96,8 +104,13 @@ start_in_dir() {
     echo
     echo "  1) New session"
     echo "  2) Resume (pick from history)"
+    [ "$back_on_esc" -eq 1 ] && echo "  0) Back to main menu"
     read -rp "  Choice [1-2, default 1]: " sub
-    [ "$sub" = "2" ] && run_claude --resume || run_claude
+    case "${sub:-1}" in
+      0) [ "$back_on_esc" -eq 1 ] && return 0 || run_claude ;;
+      2) run_claude --resume ;;
+      *) run_claude ;;
+    esac
     return
   fi
 
@@ -137,17 +150,19 @@ case "${1:-}" in
   --scratch)     run_scratch "${2:-}" ;;
   /workspace/*)
     if [ -d "$1" ]; then
-      start_in_dir "$1"
-      exit 0
+      start_in_dir "$1" --back-on-esc
+      # Esc pressed — fall through to main menu
+    else
+      echo "  Workspace path not found: $1" >&2
+      exit 1
     fi
-    echo "  Workspace path not found: $1" >&2
-    exit 1
     ;;
 esac
 
 # --- numeric fallback without fzf ---
 show_numeric_menu() {
   print_header
+  no_projects_hint
   echo "  1) Temporary session (scratch, not saved)"
   echo "  2) Create new folder in /workspace"
   local n=2 d choice bash_opt
@@ -175,6 +190,7 @@ show_numeric_menu() {
 show_fzf_menu() {
   while true; do
     print_header
+    no_projects_hint
     local dir_items=() choice
     for d in "${dirs[@]}"; do dir_items+=("•  $d"); done
 

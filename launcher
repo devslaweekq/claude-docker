@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # launcher — host entry point into the claude-docker container. Aware of the directory it was launched from.
-#   launcher            — inside a workspace subdir -> session picker for that folder;
-#                         at workspace root -> full menu;
-#                         outside workspace -> scratch session (caller cwd bind-mounted)
+#   launcher            — inside a project (subdir of a PROJECT_DIRS root) -> session picker for that project;
+#                         at a PROJECT_DIRS root -> full menu;
+#                         outside all PROJECT_DIRS (or unset) -> full menu (caller cwd mounted as scratch)
 #   launcher --build    — local docker compose build (test changes, no push)
 #   launcher --pull     — pull latest image from Docker Hub, then start
 #   launcher --install  — add launcher to PATH (auto claude, or pick name if claude exists)
@@ -84,7 +84,7 @@ CLAUDE_HOME="${CLAUDE_HOME:-$HOME/claude-docker/home}"
 export CLAUDE_HOME
 
 if [ ! -f .env ]; then
-  echo "Missing .env — copy .env.example, set PROJECT_DIR, then retry:" >&2
+  echo "Missing .env — copy .env.example, set PROJECT_DIRS, then retry:" >&2
   echo "  cp .env.example .env && chmod 600 .env" >&2
   exit 1
 fi
@@ -101,29 +101,40 @@ for a in "$@"; do
   esac
 done
 
-# --- PROJECT_DIR from .env (mounted in the container as /workspace) ---
-proj="$(grep -E '^PROJECT_DIR=' .env | tail -1 | cut -d= -f2-)"
-proj="${proj%\"}"; proj="${proj#\"}"
-proj="${proj%% #*}"                                          # strip inline comment
-proj="${proj%"${proj##*[![:space:]]}"}"                       # trim trailing space
-proj="${proj#"${proj%%[![:space:]]*}"}"                       # trim leading space
-proj="${proj%/}"                                             # no trailing slash
-
-mode_arg=()                                   # what to pass to claude-launch (entrypoint)
-scratch_run_opts=()                           # extra docker compose run flags for auto-scratch
-proj_real="$(readlink -f "$proj" 2>/dev/null || true)"
-if [ -z "$proj_real" ] || [ ! -d "$proj_real" ]; then
-  echo "PROJECT_DIR is missing or not a directory in .env (got: ${proj:-<empty>})" >&2
-  exit 1
-fi
+# --- PROJECT_DIRS from .env: comma-separated parent dirs; each immediate subdir → /workspace/<name> ---
+proj="$(grep -E '^PROJECT_DIRS=' .env | tail -1 | cut -d= -f2- || true)"   # || true: no match must not trip set -e/pipefail
+proj="${proj%% #*}"                           # strip inline comment
+proj="${proj#"${proj%%[![:space:]]*}"}"       # trim leading space
+proj="${proj%"${proj##*[![:space:]]}"}"       # trim trailing space
+proj="${proj#\"}"; proj="${proj%\"}"          # unquote (last, so comment/space stripping can't leave a stray quote)
 
 here="$(readlink -f "$CALLER_PWD" 2>/dev/null || echo "$CALLER_PWD")"
-if [ "$here" = "$proj_real" ]; then
-  :                                           # workspace root -> full menu (no argument)
-elif [ "${here#"$proj_real"/}" != "$here" ]; then
-  mode_arg=("/workspace/${here#"$proj_real"/}")   # subdir -> session picker for that folder
-else
-  mode_arg=(--scratch "isolated session — $here mounted in scratch (outside workspace $proj_real)")
+vol_opts=()            # -v flags, one per mounted project subdir
+mode_arg=()            # claude-launch arg: empty → full menu, /workspace/… → session picker
+scratch_run_opts=()    # extra docker compose run flags for the scratch bind-mount
+at_root=0              # caller cwd is a PROJECT_DIRS parent → full menu, no scratch bind-mount
+
+# Single pass: mount every subdir, and meanwhile detect which one (if any) holds the caller cwd.
+IFS=',' read -ra _roots <<< "$proj"
+for _r in "${_roots[@]}"; do
+  _r="${_r#"${_r%%[![:space:]]*}"}"; _r="${_r%"${_r##*[![:space:]]}"}"   # trim
+  [ -n "$_r" ] || continue                                              # skip empty entries (a,,b / trailing comma)
+  _r="$(readlink -f "${_r%/}" 2>/dev/null || true)"
+  [ -d "$_r" ] || { echo "PROJECT_DIRS: '${_r:-<empty>}' is not a valid directory" >&2; exit 1; }
+  [ "$here" = "$_r" ] && at_root=1
+  for _s in "$_r"/*/; do
+    [ -d "$_s" ] || continue
+    _s="${_s%/}"; _n="$(basename "$_s")"
+    vol_opts+=(-v "$_s:/workspace/$_n")
+    if [ "$here" = "$_s" ] || [ "${here#"$_s"/}" != "$here" ]; then
+      mode_arg=("/workspace/$_n${here#"$_s"}")  # at/inside a subdir → session picker for it
+    fi
+  done
+done
+unset _roots _r _s _n
+
+# Outside every project and not at a parent root → bind-mount cwd so the menu's "scratch" lands here.
+if [ ${#mode_arg[@]} -eq 0 ] && [ "$at_root" -eq 0 ]; then
   scratch_run_opts=(-v "$here:/home/node/scratch:rw" -e SCRATCH_BIND_MOUNT=1)
 fi
 
@@ -159,4 +170,4 @@ if [ ${#passthrough_args[@]} -gt 0 ]; then
     --label claude-docker.role=exec claude --exec "${passthrough_args[@]}"
 fi
 
-exec docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${scratch_run_opts[@]}" claude "${mode_arg[@]}"
+exec docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" claude "${mode_arg[@]}"

@@ -58,9 +58,12 @@ case "$1" in
   Sessions / home:   $INSTALL_DIR/home
   TLS certs:         $INSTALL_DIR/certs/
 
-Next step — edit $INSTALL_DIR/.env:
-  • PROJECT_DIR              — host folder mounted as /workspace
+Next step — edit $INSTALL_DIR/.env manually:
+  • PROJECT_DIRS             — comma-separated host folders, each mounted as /workspace/<name>
+                               e.g. PROJECT_DIRS=/home/user/work,/home/user/personal
   • CLAUDE_CODE_OAUTH_TOKEN  — from \`claude setup-token\`, or leave empty to /login inside
+
+Then run: claude (e.g. cladock) or:  $LAUNCHER
 
 EOF
     fi

@@ -91,7 +91,8 @@ cat <<EOF
   TLS certs:         $INSTALL_DIR/certs/
 
 Next step — edit $INSTALL_DIR/.env manually:
-  • PROJECT_DIR              — host folder mounted as /workspace
+  • PROJECT_DIRS             — comma-separated host folders, each mounted as /workspace/<name>
+                               e.g. PROJECT_DIRS=/home/user/work,/home/user/personal
   • CLAUDE_CODE_OAUTH_TOKEN  — from \`claude setup-token\`, or leave empty to /login inside
 
 Then run: claude (e.g. cladock) or:  $LAUNCHER

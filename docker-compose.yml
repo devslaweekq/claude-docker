@@ -11,6 +11,6 @@ services:
     env_file:
       - .env
     volumes:
-      - ${PROJECT_DIR}:/workspace
       - ${CLAUDE_HOME}:/home/node
       - ./certs:/tmp/certs-input:ro
+      # /workspace/<name> mounts are passed dynamically by the launcher via -v flags (PROJECT_DIRS)

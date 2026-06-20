@@ -2,20 +2,10 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "enabledPlugins": {
     "claude-mem@thedotmack": true,
-    "oh-my-claudecode@omc": true,
+    "figma@claude-plugins-official": false,
     "superpowers@claude-plugins-official": true
   },
-  "env": {
-    "BASH_DEFAULT_TIMEOUT_MS": "30000",
-    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "16384"
-  },
   "extraKnownMarketplaces": {
-    "omc": {
-      "source": {
-        "source": "git",
-        "url": "https://github.com/Yeachan-Heo/oh-my-claudecode.git"
-      }
-    },
     "thedotmack": {
       "source": {
         "repo": "thedotmack/claude-mem",

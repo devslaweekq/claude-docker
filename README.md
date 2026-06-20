@@ -39,7 +39,7 @@ chmod 600 .env
 Open `.env` and set two values:
 
 ```env
-PROJECT_DIR=/home/you/projects          # folder with your projects → /workspace in the container
+PROJECT_DIRS=/home/you/projects         # comma-separated folders → each mounted as /workspace/<name>
 CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-…  # from `claude setup-token`, or leave empty to /login inside
 ```
 
@@ -91,11 +91,11 @@ menu/session.
 
 You can run `./launcher` (or your PATH command from `--install`) from any directory:
 
-| Where you run it             | What opens                              |
-| ---------------------------- | --------------------------------------- |
-| Inside `$PROJECT_DIR/my-app` | Session picker for that project         |
-| At `$PROJECT_DIR`            | Full menu — all projects, scratch, bash |
-| Outside `$PROJECT_DIR`       | Scratch session with your cwd mounted   |
+| Where you run it                            | What opens                                |
+| ------------------------------------------- | ----------------------------------------- |
+| Inside a project (subdir of `PROJECT_DIRS`) | Session picker for that project           |
+| At a `PROJECT_DIRS` root                    | Full menu — all projects, scratch, bash   |
+| Outside all `PROJECT_DIRS` (or unset)       | Full menu — your cwd available as scratch |
 
 ---
 
@@ -205,21 +205,21 @@ Claude Code, `git`, `gh` (GitHub CLI), `fzf`, `bun`, DB clients (`psql`, `mysql`
 | kubernetes | Kubernetes cluster (read-only)             |
 | sentry     | Sentry error tracking                      |
 
-Plugins pre-installed: [superpowers](https://github.com/anthropics/claude-code-superpowers), [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode), [claude-mem](https://github.com/thedotmack/claude-mem).
+Plugins pre-installed: [superpowers](https://github.com/anthropics/claude-code-superpowers), [claude-mem](https://github.com/thedotmack/claude-mem).
 
 ---
 
 ## Configuration reference
 
-| Variable                                        | Required        | Description                         |
-| ----------------------------------------------- | --------------- | ----------------------------------- |
-| `PROJECT_DIR`                                   | Clone path only | Host folder mounted as `/workspace` |
-| `CLAUDE_CODE_OAUTH_TOKEN`                       | Recommended     | OAuth token (`sk-ant-oat01-…`)      |
-| `HTTP_PROXY` / `HTTPS_PROXY`                    | No              | Outbound proxy for Anthropic API    |
-| `NO_PROXY` / `no_proxy`                         | No              | Hosts that bypass the proxy         |
-| `GH_TOKEN`                                      | No              | GitHub CLI + GitHub MCP             |
-| `CONTEXT7_API_KEY`                              | No              | Context7 MCP                        |
-| `JIRA_URL` / `JIRA_USERNAME` / `JIRA_API_TOKEN` | No              | Jira MCP                            |
+| Variable                                        | Required        | Description                                                       |
+| ----------------------------------------------- | --------------- | ----------------------------------------------------------------- |
+| `PROJECT_DIRS`                                  | Clone path only | Comma-separated host folders; each mounted as `/workspace/<name>` |
+| `CLAUDE_CODE_OAUTH_TOKEN`                       | Recommended     | OAuth token (`sk-ant-oat01-…`)                                    |
+| `HTTP_PROXY` / `HTTPS_PROXY`                    | No              | Outbound proxy for Anthropic API                                  |
+| `NO_PROXY` / `no_proxy`                         | No              | Hosts that bypass the proxy                                       |
+| `GH_TOKEN`                                      | No              | GitHub CLI + GitHub MCP                                           |
+| `CONTEXT7_API_KEY`                              | No              | Context7 MCP                                                      |
+| `JIRA_URL` / `JIRA_USERNAME` / `JIRA_API_TOKEN` | No              | Jira MCP                                                          |
 
 See [`.env.example`](.env.example) for the full template.
 

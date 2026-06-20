@@ -30,7 +30,7 @@ Installs to `~/claude-docker/` (launcher, compose file, `.env`, `home/`, `certs/
 git clone https://github.com/devslaweekq/claude-docker.git
 cd claude-docker
 cp .env.example .env && chmod 600 .env
-# set PROJECT_DIR and CLAUDE_CODE_OAUTH_TOKEN in .env, then:
+# set PROJECT_DIRS and CLAUDE_CODE_OAUTH_TOKEN in .env, then:
 ./launcher
 ```
 
