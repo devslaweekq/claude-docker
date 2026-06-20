@@ -1,0 +1,55 @@
+name: Release deb
+
+# Triggers only when files that affect the .deb package change.
+# Runs in parallel with docker-publish.yml — each workflow owns its own paths.
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - launcher
+      - docker-compose.yml
+      - .env.example
+      - package.json
+      - scripts/deb/**
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Get version
+        id: version
+        run: echo "VERSION=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Build deb
+        run: npm run build:deb
+
+      - name: Build changelog body
+        id: changelog
+        run: |
+          body=""
+          for f in $(ls changelog/*.md | grep -v README | sort); do
+            body="$body$(cat "$f")"$'\n\n'
+          done
+          {
+            echo "BODY<<EOF"
+            echo "$body"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          name: v${{ steps.version.outputs.VERSION }}
+          body: ${{ steps.changelog.outputs.BODY }}
+          files: dist/claude-docker_${{ steps.version.outputs.VERSION }}_all.deb
