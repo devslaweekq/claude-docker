@@ -27,12 +27,6 @@ if [ -d "$DEF/commands" ]; then
   cp -n "$DEF/commands/"*.md "$HOME/.claude/commands/" 2>/dev/null || true
 fi
 
-if [ -f "$DEF/mcp.json" ]; then
-  [ -f "$HOME/.claude.json" ] || echo '{}' > "$HOME/.claude.json"
-  tmp="$(mktemp)"
-  jq --slurpfile d "$DEF/mcp.json" '.mcpServers = ($d[0].mcpServers + (.mcpServers // {}))' "$HOME/.claude.json" > "$tmp" && mv "$tmp" "$HOME/.claude.json"
-fi
-
 # OAuth token in .env: skip first-run login wizard (Claude Code ignores env token in onboarding)
 if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
   [ -f "$HOME/.claude.json" ] || echo '{}' > "$HOME/.claude.json"
@@ -45,8 +39,11 @@ mapfile -t dirs < <(find "$WS" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -pri
 
 SCRATCH="•  Temporary session (scratch, not saved)"
 NEWDIR="•  Create new folder in /workspace…"
+MCPCONF="⚙  Configure MCP servers"
 BASHC="•  bash in container"
 SCRATCH_DIR="$HOME/scratch"
+MCP_CONF_FILE="$HOME/.claude-docker-mcp-configured"
+MCP_MANAGED_FILE="$HOME/.claude-docker-mcp-managed"
 
 O=$'\033[38;5;208m'; B=$'\033[1m'; D=$'\033[2m'; R=$'\033[0m'   # orange / bold / dim / reset
 
@@ -97,6 +94,99 @@ make_new_dir() {
 
 SESSIONS_BIN="${CLAUDE_SESSIONS_BIN:-claude-sessions}"
 NEWSESS="__NEW__"   # special id for the "new session" row in the unified list
+
+# --- MCP server selection ---
+
+# Remove previously managed MCP servers from ~/.claude.json
+mcp_remove_managed() {
+  [ -f "$MCP_MANAGED_FILE" ] || return 0
+  [ -f "$HOME/.claude.json" ] || return 0
+  local managed_json tmp
+  managed_json="$(cat "$MCP_MANAGED_FILE")"
+  tmp="$(mktemp)"
+  jq --argjson mgd "$managed_json" \
+     'if .mcpServers then .mcpServers |= with_entries(select(.key | IN($mgd[]) | not)) else . end' \
+     "$HOME/.claude.json" > "$tmp" && mv "$tmp" "$HOME/.claude.json"
+}
+
+# Show fzf/numeric selection UI, apply selected servers, update managed list
+mcp_select_and_apply() {
+  local mcp_file="$DEF/mcp.json"
+  [ -f "$mcp_file" ] || return 0
+
+  local all_servers
+  mapfile -t all_servers < <(jq -r '.mcpServers | keys | sort[]' "$mcp_file")
+  [ ${#all_servers[@]} -eq 0 ] && return 0
+
+  local selected_servers=()
+
+  if command -v fzf >/dev/null 2>&1; then
+    local selected
+    selected="$(printf '%s\n' "${all_servers[@]}" | \
+      fzf --multi --height=80% --reverse --border=rounded \
+          --pointer='▶' --marker='✓' \
+          --color='pointer:208,prompt:208,marker:208' \
+          --prompt='MCP servers ▸ ' \
+          --header='Tab — toggle · Ctrl+A — all · Enter — confirm · Esc — skip' \
+          --bind='ctrl-a:toggle-all')" || selected=""
+    [ -n "$selected" ] && mapfile -t selected_servers <<< "$selected"
+  else
+    print_header
+    printf '   Configure MCP Servers\n\n'
+    local i=1
+    for s in "${all_servers[@]}"; do
+      printf '  %2d) %s\n' "$i" "$s"
+      i=$((i + 1))
+    done
+    printf '   A) All servers\n   Enter — skip all\n\n'
+    local choice
+    read -rp '  Select (space-separated numbers or A): ' choice
+    if [ "${choice,,}" = "a" ] || [ "${choice,,}" = "all" ]; then
+      selected_servers=("${all_servers[@]}")
+    else
+      for num in $choice; do
+        if [[ "$num" =~ ^[0-9]+$ ]] && [ "$num" -ge 1 ] && [ "$num" -le "${#all_servers[@]}" ]; then
+          selected_servers+=("${all_servers[$((num - 1))]}")
+        fi
+      done
+    fi
+  fi
+
+  # Remove previously managed servers before applying new selection
+  mcp_remove_managed
+
+  [ -f "$HOME/.claude.json" ] || echo '{}' > "$HOME/.claude.json"
+
+  if [ ${#selected_servers[@]} -gt 0 ]; then
+    local selected_json tmp
+    selected_json="$(printf '%s\n' "${selected_servers[@]}" | jq -R . | jq -s .)"
+    tmp="$(mktemp)"
+    jq --slurpfile d "$mcp_file" \
+       --argjson sel "$selected_json" \
+       '.mcpServers = (($d[0].mcpServers | with_entries(select(.key | IN($sel[])))) + (.mcpServers // {}))' \
+       "$HOME/.claude.json" > "$tmp" && mv "$tmp" "$HOME/.claude.json"
+    printf '%s\n' "${selected_servers[@]}" | jq -R . | jq -s . > "$MCP_MANAGED_FILE"
+    printf '\n  Added MCP servers: %s\n' "${selected_servers[*]}"
+  else
+    echo '[]' > "$MCP_MANAGED_FILE"
+    printf '\n  No MCP servers added.\n'
+  fi
+
+  touch "$MCP_CONF_FILE"
+  sleep 1.2
+}
+
+# First-run MCP onboarding screen
+mcp_onboarding() {
+  printf '\033c\n'
+  printf '   %s╭────────────────────────────────────────╮%s\n' "$O" "$R"
+  printf '   %s│ %sMCP Server Setup%s                       │%s\n' "$O" "$B" "$O" "$R"
+  printf '   %s│ %sChoose which MCP servers to enable%s     │%s\n' "$O" "$D" "$R" "$O" "$R"
+  printf '   %s╰────────────────────────────────────────╯%s\n\n' "$O" "$R"
+  mcp_select_and_apply
+}
+
+# --- end MCP section ---
 
 # pick folder -> single page: "New session" + saved sessions (resume)
 # optional --back-on-esc: Esc returns to caller instead of exiting the container
@@ -171,18 +261,22 @@ show_numeric_menu() {
   no_projects_hint
   echo "  1) Temporary session (scratch, not saved)"
   echo "  2) Create new folder in /workspace"
-  local n=2 d choice bash_opt
+  local n=2 d choice mcp_opt bash_opt
   for d in "${dirs[@]}"; do
     n=$((n + 1))
     printf "  %d) Run claude in %s\n" "$n" "$d"
   done
-  bash_opt=$((n + 1))
+  mcp_opt=$((n + 1))
+  bash_opt=$((n + 2))
+  printf "  %d) Configure MCP servers\n" "$mcp_opt"
   printf "  %d) bash in container\n" "$bash_opt"
   read -rp "  Choice [1-$bash_opt]: " choice
   if [ "$choice" = "1" ]; then
     prepare_scratch; run_claude
   elif [ "$choice" = "2" ]; then
     make_new_dir || true
+  elif [ "$choice" = "$mcp_opt" ]; then
+    mcp_select_and_apply; show_numeric_menu
   elif [ "$choice" = "$bash_opt" ]; then
     cd "$WS"; exec bash
   elif [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 3 ] && [ "$choice" -le "$n" ]; then
@@ -200,23 +294,29 @@ show_fzf_menu() {
     local dir_items=() choice
     for d in "${dirs[@]}"; do dir_items+=("•  $d"); done
 
-    choice="$(printf '%s\n' "$SCRATCH" "$NEWDIR" "${dir_items[@]}" "$BASHC" \
+    choice="$(printf '%s\n' "$SCRATCH" "$NEWDIR" "${dir_items[@]}" "$MCPCONF" "$BASHC" \
       | fzf --height=60% --reverse --border=rounded --pointer='▶' \
             --color='pointer:208,prompt:208' --prompt='▸ ' \
             --header='type to search · ↑↓ select · Enter · Esc — quit' \
             --no-multi)" || choice=""
 
     case "$choice" in
-      "")          exit 0 ;;
-      "$SCRATCH")  run_scratch ;;
-      "$BASHC")    cd "$WS"; exec bash ;;
-      "$NEWDIR")   make_new_dir || continue ;;
-      '•  /'*)     start_in_dir "${choice#•  }" --back-on-esc || continue ;;
-      *)           echo "  Invalid choice." >&2; exit 1 ;;
+      "")           exit 0 ;;
+      "$SCRATCH")   run_scratch ;;
+      "$BASHC")     cd "$WS"; exec bash ;;
+      "$NEWDIR")    make_new_dir || continue ;;
+      "$MCPCONF")   mcp_select_and_apply; continue ;;
+      '•  /'*)      start_in_dir "${choice#•  }" --back-on-esc || continue ;;
+      *)            echo "  Invalid choice." >&2; exit 1 ;;
     esac
     break
   done
 }
+
+# MCP onboarding: run once on first container start (after all functions are defined)
+if [ -f "$DEF/mcp.json" ] && [ ! -f "$MCP_CONF_FILE" ]; then
+  mcp_onboarding
+fi
 
 if ! command -v fzf >/dev/null 2>&1; then
   show_numeric_menu
