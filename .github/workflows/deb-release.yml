@@ -70,7 +70,7 @@ jobs:
       - name: Import GPG key
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-          echo "8FD8314EA97E4DB6:6:" | gpg --import-ownertrust
+          echo "9B2E96DB2175D394B5E1B8DE8FD8314EA97E4DB6:6:" | gpg --import-ownertrust
 
       - name: Publish to APT repository
         run: |
