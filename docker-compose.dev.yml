@@ -7,10 +7,10 @@ services:
     network_mode: host # reuse host network (Tailscale) for access to DB
     stdin_open: true # -i
     tty: true # -t  (interactive claude console)
-    user: "0:0" # update-ca-certificates needs root; claude-launch runs as node (update-certs.sh in image)
+    user: '0:0' # update-ca-certificates needs root; claude-launch runs as node (update-certs.sh in image)
     environment:
-      - LANG=C.UTF-8
-      - LC_ALL=C.UTF-8
+      - LANG=en_US.UTF-8
+      - LC_ALL=en_US.UTF-8
     env_file:
       - ./.env # secrets + settings (token, proxy, PROJECT_DIRS, GH_TOKEN)
     volumes:
@@ -40,4 +40,4 @@ services:
       - ${COMFYUI_HOME}/models:/opt/ComfyUI/models
       - ${COMFYUI_HOME}/output:/opt/ComfyUI/output
       - ${COMFYUI_HOME}/user:/opt/ComfyUI/user
-    restart: "no"
+    restart: 'no'

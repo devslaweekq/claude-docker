@@ -24,7 +24,10 @@ install -m 755 scripts/deb/postinst "$BUILD/DEBIAN/postinst"
 install -m 755 scripts/deb/postrm   "$BUILD/DEBIAN/postrm"
 
 # Data files — taken directly from repo root, no duplication
-install -m 755 launcher                       "$BUILD/usr/share/claude-docker/launcher"
+# Inject the version from package.json into the launcher (overrides the hardcoded default)
+sed "s/^LAUNCHER_VERSION=.*/LAUNCHER_VERSION=\"$VERSION\"/" launcher \
+  > "$BUILD/usr/share/claude-docker/launcher"
+chmod 755                                     "$BUILD/usr/share/claude-docker/launcher"
 install -m 644 docker-compose.yml             "$BUILD/usr/share/claude-docker/docker-compose.yml"
 install -m 644 .env.example                   "$BUILD/usr/share/claude-docker/.env.example"
 install -m 644 comfyui/workflows/default.json "$BUILD/usr/share/claude-docker/workflows/default.json"

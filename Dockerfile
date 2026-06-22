@@ -6,7 +6,9 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       git git-lfs openssh-client ca-certificates curl less jq gnupg fzf \
       postgresql-client default-mysql-client redis-tools \
-      ruby unzip
+      ruby unzip locales \
+ && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
+ && locale-gen
 
 RUN install -m 0755 -d /etc/apt/keyrings \
  && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
@@ -38,8 +40,8 @@ RUN chmod +x /usr/local/bin/update-certs.sh /usr/local/bin/ensure-claude-cli.sh 
 # Common defaults (settings + MCP) — seeded into ~/.claude at startup (see menu.sh)
 COPY claude-defaults/ /opt/claude-defaults/
 
-ENV LANG=C.UTF-8
-ENV LC_ALL=C.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
 
 WORKDIR /workspace
 USER root

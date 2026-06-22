@@ -26,6 +26,14 @@ INSTALL_DIR="$HOME/claude-docker"
 LAUNCHER="$SELF"
 [ -x "$INSTALL_DIR/launcher" ] && LAUNCHER="$INSTALL_DIR/launcher"
 
+# Keep in sync with version in package.json
+LAUNCHER_VERSION="1.2.5"
+
+if [ "${1:-}" = "-v" ] || [ "${1:-}" = "--version" ]; then
+  echo "claude-docker $LAUNCHER_VERSION"
+  exit 0
+fi
+
 if [ "${1:-}" = "--install" ]; then
   [ -d "$HOME/.local/bin" ] || mkdir -p "$HOME/.local/bin"
 
