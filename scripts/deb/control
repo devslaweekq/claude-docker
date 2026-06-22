@@ -1,6 +1,6 @@
 Package: claude-docker
 Version: VERSION_PLACEHOLDER
-Architecture: amd64 arm64 i386
+Architecture: all
 Section: utils
 Priority: optional
 Maintainer: devslaweekq
