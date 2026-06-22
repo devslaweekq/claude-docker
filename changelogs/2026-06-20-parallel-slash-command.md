@@ -1,16 +1,16 @@
-# 2026-06-20 — Bundled `/parallel` slash command
+# Changelog
 
-## Added
-- `claude-defaults/commands/parallel.md` — a slash command that fans a task out
-  to independent parallel agents (uses the `dispatching-parallel-agents` skill,
-  caps at 6 concurrent agents). Shipped inside the Docker image via the existing
-  `COPY claude-defaults/ /opt/claude-defaults/` step.
-- `scripts/menu.sh` seeds shipped commands into `~/.claude/commands/` on startup
-  with `cp -n` (copy-if-absent) — new defaults appear for every user, existing
-  user edits are never clobbered.
+## [1.0.3] - 2026-06-20
 
-## Notes
-- Reaches all install paths automatically: clone, `install.sh`, and the `.deb`
-  package all pull the prebuilt image, which now carries the command.
-- `docker-publish.yml` already triggers on `claude-defaults/**` and
-  `scripts/menu.sh`, so merging to `main` rebuilds and republishes the image.
+### Added
+
+### `claude-defaults/commands/parallel.md` — bundled `/parallel` slash command
+Fans a task out to independent parallel agents (uses the
+`dispatching-parallel-agents` skill, caps at 6 concurrent agents). Shipped
+inside the Docker image via the existing `COPY claude-defaults/ /opt/claude-defaults/`
+step.
+
+### `scripts/menu.sh` — seeds default commands on startup
+New default commands are copied into `~/.claude/commands/` with `cp -n`
+(copy-if-absent) on every container start — existing user edits are never
+clobbered.

@@ -1,9 +1,8 @@
-# 2026-06-20 — ComfyUI via Docker Compose
+# Changelog
 
-Run ComfyUI locally alongside Claude Code via Docker Compose, with GPU passthrough
-and MCP integration so Claude can generate images directly.
+## [1.1.3] - 2026-06-20
 
-## Added
+### Added
 
 ### ComfyUI Docker image (`comfyui/Dockerfile`)
 Custom build recipe based on `nvidia/cuda:13.0.3-runtime-ubuntu22.04`:
@@ -19,11 +18,12 @@ Custom build recipe based on `nvidia/cuda:13.0.3-runtime-ubuntu22.04`:
 - Network: `host` — both containers share `localhost`, so `localhost:8188` works inside Claude
 - GPU: NVIDIA passthrough (`driver: nvidia`, `capabilities: [gpu]`)
 - Volumes:
-  - `~/claude-docker/comfyui/models` → `/opt/ComfyUI/models` (host-mounted, persistent)
-  - `~/claude-docker/comfyui/output` → `/opt/ComfyUI/output` (host-mounted, generated images)
-  - `~/claude-docker/comfyui/user` → `/opt/ComfyUI/user` (host-mounted, drop workflows here)
+  - `~/claude-docker/comfyui/models` → `/opt/ComfyUI/models`
+  - `~/claude-docker/comfyui/output` → `/opt/ComfyUI/output`
+  - `~/claude-docker/comfyui/user` → `/opt/ComfyUI/user`
 
 ### `launcher --comfyui` flag
+Starts ComfyUI before the Claude session and stops it on exit:
 - Pulls `slaweekq/comfyui:latest` on first run if not cached locally
 - Checks `localhost:8188` before starting — skips if ComfyUI is already running
 - Starts the service via `docker compose --profile comfyui up -d`
@@ -32,8 +32,9 @@ Custom build recipe based on `nvidia/cuda:13.0.3-runtime-ubuntu22.04`:
 - Exports `COMFYUI_HOME` (sibling of `CLAUDE_HOME`) for compose volume paths
 
 ### `claude-defaults/mcp.json` — ComfyUI MCP
-`comfyui-mcp` server added as a default (via `npx`), pointing at `http://localhost:8188`.
-Available in every Claude session; functional when ComfyUI is running.
+`comfyui-mcp` server added as a default (via `npx`), pointing at
+`http://localhost:8188`. Available in every Claude session; functional when
+ComfyUI is running.
 
 ### `scripts/docker/build.sh` and `scripts/docker/push.sh` — flag-based image selection
 Both scripts now require an explicit target flag:
@@ -41,29 +42,31 @@ Both scripts now require an explicit target flag:
 - `--comfyui` — build/push `slaweekq/comfyui:latest`
 - `--all` — both images
 
-`npm run build:claude`, `npm run build:comfyui`, `npm run push:claude`, `npm run push:comfyui`
-added to `package.json` for convenience.
+`npm run build:claude`, `npm run build:comfyui`, `npm run push:claude`,
+`npm run push:comfyui` added to `package.json` for convenience.
 
 ### `.github/workflows/comfyui-publish.yml`
-New CI workflow: rebuilds and pushes `slaweekq/comfyui:latest` when `comfyui/Dockerfile`
-changes on `main`/`master`, or manually via `workflow_dispatch`. Uses the same Docker Hub
-secrets as `docker-publish.yml` and calls `bash ./scripts/docker/push.sh --comfyui`.
+New CI workflow: rebuilds and pushes `slaweekq/comfyui:latest` when
+`comfyui/Dockerfile` changes on `main`/`master`, or manually via
+`workflow_dispatch`.
 
 ### Install scripts (`scripts/install.sh`, `scripts/deb/postinst`)
-- Create `~/claude-docker/comfyui/{models,output,user/default/workflows}` on install
-- Seed `default.json` (Z-Image Turbo workflow) into `comfyui/user/default/workflows/` on first install
+Create `~/claude-docker/comfyui/{models,output,user/default/workflows}` on
+install; seed `default.json` (Z-Image Turbo workflow) into
+`comfyui/user/default/workflows/` on first install.
 
-## Removed
+### Changed
 
-- `COMFYUI_PATH` env-var approach (host process, `scripts/menu.sh` conditional MCP sync)
-- Workflow file seeding to host (`~/claude-docker/comfyui/user/default/workflows/`)
-  replaced by baking the workflow into the Docker image
-
-## Changed
-
-### `comfyui_user` volume → host-mount (`docker-compose.yml`, `docker-compose.dev.yml`)
-- `comfyui_user:/opt/ComfyUI/user` named volume replaced with `${COMFYUI_HOME}/user:/opt/ComfyUI/user` bind-mount
-- Workflow files placed in `~/claude-docker/comfyui/user/default/workflows/` are visible in ComfyUI web UI immediately without restarting the container
-- Install scripts now create `comfyui/user/default/workflows/` and seed `default.json` there on first install
+### `comfyui_user` volume → host-mount
+`docker-compose.yml`, `docker-compose.dev.yml` — `comfyui_user:/opt/ComfyUI/user`
+named volume replaced with `${COMFYUI_HOME}/user:/opt/ComfyUI/user` bind-mount.
+Workflow files placed in `~/claude-docker/comfyui/user/default/workflows/` are
+visible in the ComfyUI web UI immediately without restarting the container.
 
 > **Migration:** `docker volume rm claude-docker_comfyui_user && mkdir -p ~/claude-docker/comfyui/user/default/workflows`
+
+### Removed
+
+### COMFYUI_PATH env-var approach
+Host-process ComfyUI start and `scripts/menu.sh` conditional MCP sync removed;
+replaced by the Docker Compose service and `--comfyui` launcher flag.

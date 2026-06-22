@@ -1,24 +1,31 @@
-# Multi-directory workspace support (PROJECT_DIRS)
+# Changelog
 
-Replace `PROJECT_DIR` (single path) with `PROJECT_DIRS` (comma-separated list of parent directories).
-Each entry is a projects root — its immediate subdirectories are mounted into the container as `/workspace/<name>`.
+## [1.0.3] - 2026-06-20
 
-## Changes
+### Changed
 
-- `launcher`: parse `PROJECT_DIRS`, scan immediate subdirs of each root, build dynamic `-v` flags,
-  detect which project the caller cwd belongs to (otherwise the full menu, with the cwd bind-mounted as scratch)
-- `docker-compose.yml`, `docker-compose.dev.yml`: remove static `${PROJECT_DIR}:/workspace`
-  volume — mounts are now passed at runtime by the launcher
-- `.env.example`, `README.md`, `INSTALL.md`, `scripts/install.sh`, `scripts/deb/postinst`:
-  update docs to reference `PROJECT_DIRS`
+### `PROJECT_DIR` → `PROJECT_DIRS` — multi-directory workspace support
+`PROJECT_DIR` (single path) replaced with `PROJECT_DIRS` (comma-separated list
+of parent directories). Each entry is a projects root — its immediate
+subdirectories are mounted into the container as `/workspace/<name>`.
 
-## Migration
+**`launcher`** — parses `PROJECT_DIRS`, scans immediate subdirs of each root,
+builds dynamic `-v` flags, detects which project the caller cwd belongs to
+(otherwise shows the full menu, with the cwd bind-mounted as scratch).
 
-The semantics changed: `PROJECT_DIR` was mounted **as** `/workspace`, while each `PROJECT_DIRS`
-entry is now a **parent** whose immediate subdirectories are each mounted as `/workspace/<name>`.
-Point `PROJECT_DIRS` at the folder that *contains* your projects, not at a single project.
+**`docker-compose.yml`, `docker-compose.dev.yml`** — static
+`${PROJECT_DIR}:/workspace` volume removed; mounts are now passed at runtime by
+the launcher.
 
-In `.env`, replace:
+**`.env.example`, `README.md`, `INSTALL.md`, `scripts/install.sh`,
+`scripts/deb/postinst`** — updated to reference `PROJECT_DIRS`.
+
+**Caller cwd behaviour:**
+- Inside a project (subdir of a `PROJECT_DIRS` root) → session picker for that project
+- At a `PROJECT_DIRS` root → full menu showing all projects
+- Outside all `PROJECT_DIRS` (or `PROJECT_DIRS` unset) → full menu, cwd bind-mounted as scratch
+
+**Migration** — in `.env`, replace:
 ```
 PROJECT_DIR=/home/user/work/my-app
 ```
@@ -26,15 +33,4 @@ with the parent that holds your projects:
 ```
 PROJECT_DIRS=/home/user/work
 ```
-Or list multiple parents:
-```
-PROJECT_DIRS=/home/user/work,/home/user/personal
-```
-
-Each project subdir (e.g. `work/my-app`) is then accessible in the container at `/workspace/my-app`.
-
-## Behavior
-
-- Caller cwd **inside a project** (subdir of a `PROJECT_DIRS` root) → session picker for that project
-- Caller cwd **at a `PROJECT_DIRS` root** → full menu showing all projects
-- Caller cwd **outside all `PROJECT_DIRS`** (or `PROJECT_DIRS` unset) → full menu, with the cwd bind-mounted so the scratch option opens it
+Each project subdir (e.g. `work/my-app`) is then accessible at `/workspace/my-app`.

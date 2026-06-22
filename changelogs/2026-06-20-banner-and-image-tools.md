@@ -1,6 +1,8 @@
-# 2026-06-20 — Repository banner and image tooling
+# Changelog
 
-## Added
+## [1.2.0] - 2026-06-20
+
+### Added
 
 ### `assets/banner.png` — repository banner
 AI-generated banner for the README, composed from two elements:
@@ -9,7 +11,6 @@ AI-generated banner for the README, composed from two elements:
 
 Generated with ComfyUI (`slaweekq/comfyui:latest`, Z-Image Turbo model) via the
 `comfyui-mcp` server running in the Claude session. Text overlay applied with `jimp`.
-
 
 ### `Dockerfile` — jimp pre-installed globally
 `jimp` added to the global npm install — pure JavaScript, no native dependencies,
