@@ -32,6 +32,9 @@ jobs:
         id: version
         run: echo "VERSION=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
+      - name: Install reprepro
+        run: sudo apt-get update -qq && sudo apt-get install -y reprepro dpkg-dev
+
       - name: Build deb
         run: npm run build:deb
 
@@ -57,3 +60,28 @@ jobs:
           name: v${{ steps.version.outputs.VERSION }}
           body: ${{ steps.changelogs.outputs.BODY }}
           files: dist/claude-docker_${{ steps.version.outputs.VERSION }}_all.deb
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: apt-repo
+
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          echo "8FD8314EA97E4DB6:6:" | gpg --import-ownertrust
+
+      - name: Publish to APT repository
+        run: |
+          cd apt-repo
+          reprepro includedeb stable ../dist/claude-docker_${{ steps.version.outputs.VERSION }}_all.deb
+
+      - name: Push gh-pages
+        run: |
+          cd apt-repo
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "apt: publish v${{ steps.version.outputs.VERSION }}"
+          git push

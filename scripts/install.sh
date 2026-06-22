@@ -30,27 +30,23 @@ case "$(uname -s)" in
     ;;
 esac
 
-# ── Ubuntu/Debian: install via .deb from latest GitHub release ───────────────
+# ── Ubuntu/Debian: configure APT repository for automatic updates ─────────────
 if command -v dpkg >/dev/null 2>&1 && command -v apt-get >/dev/null 2>&1; then
-  echo "==> Fetching latest claude-docker release..."
-  DEB_URL=$(curl -fsSL --connect-timeout 15 --max-time 30 \
-    "https://api.github.com/repos/$GITHUB_REPO/releases/latest" \
-    2>/dev/null \
-    | grep '"browser_download_url"' | grep '\.deb"' | head -1 \
-    | cut -d'"' -f4 || true)
+  echo "==> Setting up claude-docker APT repository..."
 
-  if [ -n "$DEB_URL" ]; then
-    TMP=$(mktemp /tmp/claude-docker-XXXXXX.deb)
-    trap 'rm -f "$TMP"' EXIT
-    echo "==> Downloading $DEB_URL"
-    curl -fL --connect-timeout 15 --max-time 300 --retry 3 --retry-delay 2 \
-      "$DEB_URL" -o "$TMP"
-    echo "==> Installing package..."
-    sudo dpkg -i "$TMP"
-    exit 0
-  fi
+  # Add GPG key
+  curl -fsSL --connect-timeout 15 --max-time 30 \
+    "https://devslaweekq.github.io/claude-docker/KEY.gpg" \
+    | sudo gpg --dearmor -o /usr/share/keyrings/claude-docker.gpg
 
-  echo "    No release found, falling back to manual install..."
+  # Add sources.list entry (idempotent)
+  echo "deb [signed-by=/usr/share/keyrings/claude-docker.gpg] https://devslaweekq.github.io/claude-docker stable main" \
+    | sudo tee /etc/apt/sources.list.d/claude-docker.list > /dev/null
+
+  echo "==> Installing claude-docker..."
+  sudo apt-get update -qq
+  sudo apt-get install -y claude-docker
+  exit 0
 fi
 
 # ── Ensure Docker is available ────────────────────────────────────────────────

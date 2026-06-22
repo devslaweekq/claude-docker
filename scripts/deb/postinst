@@ -20,7 +20,20 @@ case "$1" in
       echo "    Note: re-login or run 'newgrp docker' for the group change to take effect."
     fi
 
-    # ── 2. Install files to ~/claude-docker (mirrors install.sh) ─────────────
+    # ── 2. Set up APT repository for automatic future updates ─────────────────
+    echo "==> Setting up claude-docker APT repository..."
+    if command -v curl >/dev/null 2>&1; then
+      curl -fsSL --connect-timeout 15 --max-time 30 \
+        "https://devslaweekq.github.io/claude-docker/KEY.gpg" \
+        | gpg --dearmor -o /usr/share/keyrings/claude-docker.gpg 2>/dev/null || true
+      if [ -f /usr/share/keyrings/claude-docker.gpg ]; then
+        echo "deb [signed-by=/usr/share/keyrings/claude-docker.gpg] https://devslaweekq.github.io/claude-docker stable main" \
+          > /etc/apt/sources.list.d/claude-docker.list
+        echo "    APT repository configured — future updates via: sudo apt upgrade"
+      fi
+    fi
+
+    # ── 3. Install files to ~/claude-docker (mirrors install.sh) ─────────────
     if [ -n "$REAL_USER" ]; then
       INSTALL_DIR="/home/$REAL_USER/claude-docker"
       LAUNCHER="$INSTALL_DIR/launcher"
@@ -49,7 +62,7 @@ case "$1" in
         echo "    Keeping existing $INSTALL_DIR/.env"
       fi
 
-      # ── 3. Add launcher to PATH ───────────────────────────────────────────
+      # ── 4. Add launcher to PATH ───────────────────────────────────────────
       rm -f /tmp/claude-docker-chosen-cmd
       if [ -e /dev/tty ]; then
         sudo -H -u "$REAL_USER" "$LAUNCHER" --install </dev/tty
