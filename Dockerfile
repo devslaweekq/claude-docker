@@ -43,6 +43,9 @@ COPY claude-defaults/ /opt/claude-defaults/
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 
+# Force UTF-8 character-set mode in xterm.js (VS Code terminal) for every interactive bash session.
+RUN printf '\033%%G' >> /home/node/.bashrc
+
 WORKDIR /workspace
 USER root
 ENTRYPOINT ["/usr/local/bin/update-certs.sh"]

@@ -48,7 +48,8 @@ MCP_MANAGED_FILE="$HOME/.claude-docker-mcp-managed"
 O=$'\033[38;5;208m'; B=$'\033[1m'; D=$'\033[2m'; R=$'\033[0m'   # orange / bold / dim / reset
 
 print_header() {
-  printf '\033c\n'
+  printf '\033[3J\033[2J\033[H'
+  printf '\033%%G'
   printf '   %s╭────────────────────────────────╮%s\n' "$O" "$R"
   printf '   %s│ %sClaude Docker%s                  │%s\n' "$O" "$B" "$O" "$R"
   printf '   %s│ %sisolated Claude Code in Docker%s%s │%s\n' "$O" "$D" "$R" "$O" "$R"
@@ -66,9 +67,11 @@ no_projects_hint() {
 # full terminal reset before/after claude (RIS — no ncurses/reset dependency)
 run_claude() {
   printf '\033[3J\033[2J\033[H'
+  printf '\033%%G'
   claude "$@"
   local rc=$?
   printf '\033[3J\033[2J\033[H'
+  printf '\033%%G'
   exit "$rc"
 }
 
@@ -178,7 +181,8 @@ mcp_select_and_apply() {
 
 # First-run MCP onboarding screen
 mcp_onboarding() {
-  printf '\033c\n'
+  printf '\033[3J\033[2J\033[H'
+  printf '\033%%G'
   printf '   %s╭────────────────────────────────────────╮%s\n' "$O" "$R"
   printf '   %s│ %sMCP Server Setup%s                       │%s\n' "$O" "$B" "$O" "$R"
   printf '   %s│ %sChoose which MCP servers to enable%s     │%s\n' "$O" "$D" "$R" "$O" "$R"
@@ -235,7 +239,12 @@ start_in_dir() {
 
 # temporary (scratch) session; optional $1 — note shown before start
 run_scratch() {
-  if [ -n "${1:-}" ]; then printf '\033c\n  %s\n' "$1"; sleep 1.5; fi
+  if [ -n "${1:-}" ]; then
+    printf '\033[3J\033[2J\033[H'
+    printf '\033%%G'
+    printf '  %s\n' "$1"
+    sleep 1.5
+  fi
   prepare_scratch
   run_claude
 }
@@ -278,6 +287,7 @@ show_numeric_menu() {
   elif [ "$choice" = "$mcp_opt" ]; then
     mcp_select_and_apply; show_numeric_menu
   elif [ "$choice" = "$bash_opt" ]; then
+    printf '\033[3J\033[2J\033[H'; printf '\033%%G'
     cd "$WS"; exec bash
   elif [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 3 ] && [ "$choice" -le "$n" ]; then
     start_in_dir "${dirs[$((choice - 3))]}"
@@ -303,7 +313,7 @@ show_fzf_menu() {
     case "$choice" in
       "")           exit 0 ;;
       "$SCRATCH")   run_scratch ;;
-      "$BASHC")     cd "$WS"; exec bash ;;
+      "$BASHC")     printf '\033[3J\033[2J\033[H'; printf '\033%%G'; cd "$WS"; exec bash ;;
       "$NEWDIR")    make_new_dir || continue ;;
       "$MCPCONF")   mcp_select_and_apply; continue ;;
       '•  /'*)      start_in_dir "${choice#•  }" --back-on-esc || continue ;;
