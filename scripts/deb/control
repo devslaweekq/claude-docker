@@ -2,6 +2,7 @@ Package: claude-docker
 Version: VERSION_PLACEHOLDER
 Architecture: amd64 arm64 i386
 Section: utils
+Priority: optional
 Maintainer: devslaweekq
 Depends: curl
 Description: Isolated Claude Code in Docker
