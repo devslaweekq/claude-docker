@@ -32,16 +32,14 @@ esac
 
 # ── Ubuntu/Debian: configure APT repository for automatic updates ─────────────
 if command -v dpkg >/dev/null 2>&1 && command -v apt-get >/dev/null 2>&1; then
-  echo "==> Setting up claude-docker APT repository..."
-
-  # Add GPG key
-  curl -fsSL --connect-timeout 15 --max-time 30 \
-    "https://devslaweekq.github.io/claude-docker/KEY.gpg" \
-    | sudo gpg --dearmor -o /usr/share/keyrings/claude-docker.gpg
-
-  # Add sources.list entry (idempotent)
-  echo "deb [signed-by=/usr/share/keyrings/claude-docker.gpg] https://devslaweekq.github.io/claude-docker stable main" \
-    | sudo tee /etc/apt/sources.list.d/claude-docker.list > /dev/null
+  if [ ! -f /usr/share/keyrings/claude-docker.gpg ] || [ ! -f /etc/apt/sources.list.d/claude-docker.list ]; then
+    echo "==> Setting up claude-docker APT repository..."
+    curl -fsSL --connect-timeout 15 --max-time 30 \
+      "https://devslaweekq.github.io/claude-docker/KEY.gpg" \
+      | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/claude-docker.gpg
+    echo "deb [signed-by=/usr/share/keyrings/claude-docker.gpg] https://devslaweekq.github.io/claude-docker stable main" \
+      | sudo tee /etc/apt/sources.list.d/claude-docker.list > /dev/null
+  fi
 
   echo "==> Installing claude-docker..."
   sudo apt-get update -qq
