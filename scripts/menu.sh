@@ -65,10 +65,10 @@ no_projects_hint() {
 
 # full terminal reset before/after claude (RIS — no ncurses/reset dependency)
 run_claude() {
-  printf '\033c'
+  printf '\033[3J\033[2J\033[H'
   claude "$@"
   local rc=$?
-  printf '\033c'
+  printf '\033[3J\033[2J\033[H'
   exit "$rc"
 }
 
