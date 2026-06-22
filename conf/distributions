@@ -1,0 +1,7 @@
+Origin: claude-docker
+Label: claude-docker
+Codename: stable
+Architectures: all amd64
+Components: main
+Description: Claude Docker launcher apt repository
+SignWith: 8FD8314EA97E4DB6
