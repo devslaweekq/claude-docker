@@ -1,0 +1,5 @@
+Component: main
+Origin: claude-docker
+Label: claude-docker
+Architecture: amd64
+Description: Claude Docker launcher apt repository

@@ -1,0 +1,19 @@
+Package: claude-docker
+Version: 1.2.10
+Architecture: all
+Maintainer: devslaweekq
+Depends: curl
+Priority: optional
+Section: utils
+Filename: pool/main/c/claude-docker/claude-docker_1.2.10_all.deb
+Size: 8334
+SHA256: 45653d5ae51d5fdc1ede2fb67b1c6408b875fb217bbf38c8076e73c9bc1238f2
+SHA1: 10120964286ee4c2b60aeacd6df457728eee1191
+MD5sum: 400ffc78a8260eee29b39ef84faacf20
+Description: Isolated Claude Code in Docker
+  Runs Claude Code (Anthropic AI assistant) in an isolated Docker container
+  with persistent sessions, TLS support, and a project workspace mount.
+  .
+  On install Docker is set up automatically if absent, the image is pulled
+  from Docker Hub, and the launcher is added to PATH.
+
