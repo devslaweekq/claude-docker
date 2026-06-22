@@ -38,6 +38,9 @@ RUN chmod +x /usr/local/bin/update-certs.sh /usr/local/bin/ensure-claude-cli.sh 
 # Common defaults (settings + MCP) — seeded into ~/.claude at startup (see menu.sh)
 COPY claude-defaults/ /opt/claude-defaults/
 
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
 WORKDIR /workspace
 USER root
 ENTRYPOINT ["/usr/local/bin/update-certs.sh"]

@@ -8,6 +8,9 @@ services:
     stdin_open: true # -i
     tty: true # -t  (interactive claude console)
     user: "0:0" # update-ca-certificates needs root; claude-launch runs as node (update-certs.sh in image)
+    environment:
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
     env_file:
       - ./.env # secrets + settings (token, proxy, PROJECT_DIRS, GH_TOKEN)
     volumes:

@@ -28,6 +28,22 @@ LAUNCHER="$SELF"
 
 if [ "${1:-}" = "--install" ]; then
   [ -d "$HOME/.local/bin" ] || mkdir -p "$HOME/.local/bin"
+
+  # If a symlink in ~/.local/bin already points to this launcher, just refresh it silently
+  _existing_cmd=""
+  for _f in "$HOME/.local/bin/"*; do
+    [ -L "$_f" ] || continue
+    [ "$(readlink -f "$_f" 2>/dev/null || true)" = "$(readlink -f "$LAUNCHER")" ] || continue
+    _existing_cmd="$(basename "$_f")"
+    break
+  done
+  if [ -n "$_existing_cmd" ]; then
+    ln -sf "$LAUNCHER" "$HOME/.local/bin/$_existing_cmd"
+    echo "OK: $HOME/.local/bin/$_existing_cmd -> $LAUNCHER (updated)"
+    echo "$_existing_cmd" > /tmp/claude-docker-chosen-cmd 2>/dev/null || true
+    exit 0
+  fi
+
   native_cli=0
   native_where=""
   for v in "$HOME/.local/share/claude/versions/"*; do
