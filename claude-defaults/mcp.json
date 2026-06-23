@@ -35,6 +35,15 @@
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
     },
+    "grafana": {
+      "args": ["--disable-write", "mcp-grafana"],
+      "command": "uvx",
+      "env": {
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN": "${GRAFANA_SERVICE_ACCOUNT_TOKEN:-}",
+        "GRAFANA_URL": "${GRAFANA_URL:-}"
+      },
+      "type": "stdio"
+    },
     "kubernetes": {
       "args": ["-y", "mcp-server-kubernetes"],
       "command": "npx",

@@ -29,6 +29,10 @@ RUN npm install -g @anthropic-ai/claude-code@latest jimp \
 COPY --from=oven/bun:latest /usr/local/bin/bun /usr/local/bin/bun
 COPY --from=oven/bun:latest /usr/local/bin/bunx /usr/local/bin/bunx
 
+# uv — copy ready binary from official image (enables uvx for Python-based MCP servers)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uvx /usr/local/bin/uvx
+
 # Startup: TLS proxy certs (compose mount) → menu as node
 COPY scripts/builds/update-certs.sh /usr/local/bin/update-certs.sh
 COPY scripts/builds/ensure-claude-cli.sh /usr/local/bin/ensure-claude-cli.sh
