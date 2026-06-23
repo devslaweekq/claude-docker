@@ -36,11 +36,12 @@
       "url": "https://api.githubcopilot.com/mcp/"
     },
     "grafana": {
-      "args": ["--disable-write", "mcp-grafana"],
+      "args": ["mcp-grafana", "--disable-write"],
       "command": "uvx",
       "env": {
         "GRAFANA_SERVICE_ACCOUNT_TOKEN": "${GRAFANA_SERVICE_ACCOUNT_TOKEN:-}",
-        "GRAFANA_URL": "${GRAFANA_URL:-}"
+        "GRAFANA_URL": "${GRAFANA_URL:-}",
+        "NO_PROXY": "*"
       },
       "type": "stdio"
     },

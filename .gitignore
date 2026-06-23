@@ -16,3 +16,6 @@ claude.ico
 *.lnk
 
 .omc
+
+dist
+build
