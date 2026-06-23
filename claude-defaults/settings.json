@@ -34,5 +34,6 @@
   },
   "skipWorkflowUsageWarning": true,
   "spinnerTipsEnabled": false,
-  "theme": "dark-ansi"
+  "theme": "dark-ansi",
+  "verbose": false
 }
