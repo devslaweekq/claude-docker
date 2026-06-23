@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Build and push Docker images to Docker Hub.
+# Push locally built Docker images to Docker Hub.
+# Run build.sh first to build and load the image.
 #
 # Usage:
 #   bash scripts/docker/push.sh --claude    # push slaweekq/claude-docker:latest
@@ -9,8 +10,7 @@
 # Local: log in first:
 #   echo YOUR_DOCKER_PASS | docker login -u YOUR_DOCKER_USERNAME --password-stdin
 #
-# CI (GitHub Actions): login is done by the workflow; set GITHUB_ACTIONS=true
-# and DOCKER_USERNAME env var.
+# CI (GitHub Actions): login is done by the workflow; set DOCKER_USERNAME env var.
 
 set -euo pipefail
 
@@ -40,49 +40,26 @@ fi
 
 push_claude() {
   local IMAGE="$DOCKER_USERNAME/claude-docker:latest"
-  local CACHE="$DOCKER_USERNAME/claude-docker:buildcache"
 
-  if [ "$CI" != "true" ]; then
-    echo "==> Stop running Claude Docker sessions (if any)"
-    mapfile -t running < <(docker ps -q --filter label=claude-docker.role=session 2>/dev/null || true)
-    [ ${#running[@]} -gt 0 ] && docker stop "${running[@]}"
+  [ "$CI" != "true" ] && DOCKER_USERNAME="$DOCKER_USERNAME" bash "$REPO/scripts/docker/build.sh" --claude
 
-    echo "==> Remove old local image: $IMAGE"
-    docker rmi -f "$IMAGE" 2>/dev/null || true
-  fi
-
-  echo "==> Build and push: $IMAGE"
-  docker buildx build \
-    --progress=plain \
-    --build-arg HTTP_PROXY= --build-arg http_proxy= \
-    --build-arg HTTPS_PROXY= --build-arg https_proxy= \
-    --cache-from type=registry,ref="$CACHE" \
-    --cache-to   type=registry,ref="$CACHE",mode=max \
-    -t "$IMAGE" --push \
-    .
-
+  echo "==> Push: $IMAGE"
+  docker push "$IMAGE"
   [ "$CI" != "true" ] && docker pull "$IMAGE"
 
   echo "  Registry: $IMAGE"
-  echo "  Cache:    $CACHE"
 }
 
 push_comfyui() {
   local IMAGE="$DOCKER_USERNAME/comfyui:latest"
-  local CACHE="$DOCKER_USERNAME/comfyui:buildcache"
 
-  echo "==> Build and push: $IMAGE"
-  docker buildx build \
-    --progress=plain \
-    --cache-from type=registry,ref="$CACHE" \
-    --cache-to   type=registry,ref="$CACHE",mode=max \
-    -t "$IMAGE" --push \
-    ./comfyui
+  [ "$CI" != "true" ] && DOCKER_USERNAME="$DOCKER_USERNAME" bash "$REPO/scripts/docker/build.sh" --comfyui
 
+  echo "==> Push: $IMAGE"
+  docker push "$IMAGE"
   [ "$CI" != "true" ] && docker pull "$IMAGE"
 
   echo "  Registry: $IMAGE"
-  echo "  Cache:    $CACHE"
 }
 
 case "$TARGET" in

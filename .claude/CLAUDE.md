@@ -33,6 +33,10 @@ Every set of changes that will land in one commit follows this exact sequence:
 
 `scripts/install.sh` and `scripts/deb/postinst` contain heavily overlapping logic. **Always edit both in parallel** — never change one without checking and mirroring the change in the other.
 
+## Commented-out Code
+
+**Never delete commented-out lines** in any file — they are intentional notes left by the author. Only remove a comment if the user explicitly asks to remove it.
+
 ## GitHub Actions Versions
 
 Always check actual latest versions via GitHub MCP (`mcp__github__get_latest_release`) before writing any workflow file. Do NOT use context7 or existing project files as version reference — they lag behind.
