@@ -1,6 +1,6 @@
 {
   "name": "claude-docker",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "private": true,
   "description": "Isolated Claude Code in Docker",
   "license": "MIT",

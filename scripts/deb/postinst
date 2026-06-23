@@ -20,7 +20,32 @@ case "$1" in
       echo "    Note: re-login or run 'newgrp docker' for the group change to take effect."
     fi
 
-    # ── 2. Set up APT repository for automatic future updates ─────────────────
+    # ── 2. WSL2: raise Docker Desktop VM limits ───────────────────────────────
+    if grep -qi microsoft /proc/version 2>/dev/null && [ -n "$REAL_USER" ]; then
+      WIN_HOME="$(sudo -u "$REAL_USER" bash -c \
+        'wslpath "$(cmd.exe /c "echo %USERPROFILE%" 2>/dev/null | tr -d "\r\n")" 2>/dev/null || true')"
+      if [ -n "$WIN_HOME" ] && [ -d "$WIN_HOME" ]; then
+        WSLCONFIG="$WIN_HOME/.wslconfig"
+        if [ ! -f "$WSLCONFIG" ]; then
+          HOST_MEM_BYTES="$(powershell.exe -NoProfile -Command \
+            '(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory' 2>/dev/null \
+            | tr -d '\r\n' || echo 0)"
+          MEM_GB=$(( ${HOST_MEM_BYTES:-0} / 1024 / 1024 / 1024 * 3 / 4 ))
+          [ "$MEM_GB" -lt 4 ] && MEM_GB=4
+          PROCS="$(powershell.exe -NoProfile -Command \
+            '(Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors' 2>/dev/null \
+            | tr -d '\r\n' || nproc)"
+          printf '[wsl2]\nmemory=%dGB\nprocessors=%s\n' "$MEM_GB" "$PROCS" \
+            | sudo -u "$REAL_USER" tee "$WSLCONFIG" > /dev/null
+          echo "==> Created $WSLCONFIG (memory=${MEM_GB}GB, processors=${PROCS})"
+          echo "    Run 'wsl --shutdown' and restart Docker Desktop to apply."
+        else
+          echo "    $WSLCONFIG already exists — skipping (edit manually to tune memory/processors)"
+        fi
+      fi
+    fi
+
+    # ── 3. Set up APT repository for automatic future updates ────────────────
     if [ ! -f /usr/share/keyrings/claude-docker.gpg ] || [ ! -f /etc/apt/sources.list.d/claude-docker.list ]; then
       echo "==> Setting up claude-docker APT repository..."
       if command -v curl >/dev/null 2>&1; then
@@ -35,7 +60,7 @@ case "$1" in
       fi
     fi
 
-    # ── 3. Install files to ~/claude-docker (mirrors install.sh) ─────────────
+    # ── 4. Install files to ~/claude-docker (mirrors install.sh) ─────────────
     if [ -n "$REAL_USER" ]; then
       INSTALL_DIR="/home/$REAL_USER/claude-docker"
       LAUNCHER="$INSTALL_DIR/launcher"
@@ -64,7 +89,7 @@ case "$1" in
         echo "    Keeping existing $INSTALL_DIR/.env"
       fi
 
-      # ── 4. Add launcher to PATH ───────────────────────────────────────────
+      # ── 5. Add launcher to PATH ───────────────────────────────────────────
       rm -f /tmp/claude-docker-chosen-cmd
       if [ -e /dev/tty ]; then
         sudo -H -u "$REAL_USER" "$LAUNCHER" --install </dev/tty

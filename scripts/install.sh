@@ -72,6 +72,28 @@ case "$(uname -s)" in
     ;;
 esac
 
+# ── WSL2: raise Docker Desktop VM limits ─────────────────────────────────────
+if grep -qi microsoft /proc/version 2>/dev/null; then
+  WIN_HOME="$(wslpath "$(cmd.exe /c 'echo %USERPROFILE%' 2>/dev/null | tr -d '\r\n')" 2>/dev/null || true)"
+  if [ -n "$WIN_HOME" ] && [ -d "$WIN_HOME" ]; then
+    WSLCONFIG="$WIN_HOME/.wslconfig"
+    if [ ! -f "$WSLCONFIG" ]; then
+      HOST_MEM_BYTES="$(powershell.exe -NoProfile -Command \
+        '(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory' 2>/dev/null | tr -d '\r\n' || echo 0)"
+      MEM_GB=$(( ${HOST_MEM_BYTES:-0} / 1024 / 1024 / 1024 * 3 / 4 ))
+      [ "$MEM_GB" -lt 4 ] && MEM_GB=4
+      PROCS="$(powershell.exe -NoProfile -Command \
+        '(Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors' 2>/dev/null \
+        | tr -d '\r\n' || nproc)"
+      printf '[wsl2]\nmemory=%dGB\nprocessors=%s\n' "$MEM_GB" "$PROCS" > "$WSLCONFIG"
+      echo "==> Created $WSLCONFIG (memory=${MEM_GB}GB, processors=${PROCS})"
+      echo "    Run 'wsl --shutdown' and restart Docker Desktop to apply."
+    else
+      echo "    $WSLCONFIG already exists — skipping (edit manually to tune memory/processors)"
+    fi
+  fi
+fi
+
 # ── Fallback: manual file download (macOS / non-Debian Linux) ────────────────
 _curl() {
   curl -fsSL --connect-timeout 15 --max-time 120 --retry 3 --retry-delay 2 "$@"
