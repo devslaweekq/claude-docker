@@ -27,7 +27,7 @@ LAUNCHER="$SELF"
 [ -x "$INSTALL_DIR/launcher" ] && LAUNCHER="$INSTALL_DIR/launcher"
 
 # Keep in sync with version in package.json
-LAUNCHER_VERSION="1.2.12"
+LAUNCHER_VERSION="1.2.13"
 
 if [ "${1:-}" = "-v" ] || [ "${1:-}" = "--version" ]; then
   echo "claude-docker $LAUNCHER_VERSION"
@@ -168,6 +168,25 @@ if [ ${#mode_arg[@]} -eq 0 ] && [ "$at_root" -eq 0 ]; then
   scratch_run_opts=(-v "$here:/home/node/scratch:rw" -e SCRATCH_BIND_MOUNT=1)
 fi
 
+# Clipboard forwarding: prefer Wayland (wl-copy), fall back to X11 (xclip).
+# Claude Code selects: wl-copy > xclip > OSC 52. OSC 52 has UTF-8 encoding issues in
+# VS Code xterm.js, producing garbled Cyrillic on paste — so we avoid it by forwarding
+# the compositor socket so the container can reach the native clipboard.
+x11_run_opts=()
+_xdg="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+_wl_sock="$_xdg/${WAYLAND_DISPLAY:-wayland-0}"
+if [ -n "${WAYLAND_DISPLAY:-}" ] && [ -S "$_wl_sock" ]; then
+  # Wayland: mount only the socket file; pass XDG_RUNTIME_DIR so wl-copy can find it
+  x11_run_opts+=(-e "WAYLAND_DISPLAY=$WAYLAND_DISPLAY" -e "XDG_RUNTIME_DIR=$_xdg" -v "$_wl_sock:$_wl_sock")
+elif [ -n "${DISPLAY:-}" ] && [ -d /tmp/.X11-unix ]; then
+  # X11 fallback: mount socket dir + pass auth cookie
+  x11_run_opts+=(-e "DISPLAY=$DISPLAY" -v /tmp/.X11-unix:/tmp/.X11-unix)
+  if [ -n "${XAUTHORITY:-}" ] && [ -f "$XAUTHORITY" ]; then
+    x11_run_opts+=(-v "$XAUTHORITY:/tmp/.xdocker_auth:ro" -e "XAUTHORITY=/tmp/.xdocker_auth")
+  fi
+fi
+unset _xdg _wl_sock
+
 IMAGE=slaweekq/claude-docker:latest
 
 # --pull / --build: stop running session before replacing the image
@@ -221,13 +240,13 @@ trap _cleanup_comfyui EXIT
 if [ ${#passthrough_args[@]} -gt 0 ]; then
   tty_opts=()
   { [ -t 0 ] && [ -t 1 ]; } || tty_opts=(-T)
-  exec docker compose -f ./docker-compose.yml run --rm "${tty_opts[@]}" \
+  exec docker compose -f ./docker-compose.yml run --rm "${tty_opts[@]}" "${x11_run_opts[@]}" \
     --label claude-docker.role=exec claude --exec "${passthrough_args[@]}"
 fi
 
 if [ "$comfyui_started" -eq 1 ]; then
   # Without exec so the shell survives to run the EXIT trap (stops ComfyUI on session end)
-  docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" claude "${mode_arg[@]}"
+  docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" "${x11_run_opts[@]}" claude "${mode_arg[@]}"
 else
-  exec docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" claude "${mode_arg[@]}"
+  exec docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" "${x11_run_opts[@]}" claude "${mode_arg[@]}"
 fi

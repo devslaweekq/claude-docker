@@ -6,7 +6,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       git git-lfs openssh-client ca-certificates curl less jq gnupg fzf \
       postgresql-client default-mysql-client redis-tools \
-      ruby unzip locales \
+      ruby unzip locales xclip wl-clipboard \
  && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
  && locale-gen
 
@@ -30,10 +30,10 @@ COPY --from=oven/bun:latest /usr/local/bin/bun /usr/local/bin/bun
 COPY --from=oven/bun:latest /usr/local/bin/bunx /usr/local/bin/bunx
 
 # Startup: TLS proxy certs (compose mount) → menu as node
-COPY scripts/update-certs.sh /usr/local/bin/update-certs.sh
-COPY scripts/ensure-claude-cli.sh /usr/local/bin/ensure-claude-cli.sh
-COPY scripts/menu.sh /usr/local/bin/claude-launch
-COPY scripts/sessions.js /usr/local/bin/claude-sessions
+COPY scripts/builds/update-certs.sh /usr/local/bin/update-certs.sh
+COPY scripts/builds/ensure-claude-cli.sh /usr/local/bin/ensure-claude-cli.sh
+COPY scripts/builds/menu.sh /usr/local/bin/claude-launch
+COPY scripts/builds/sessions.js /usr/local/bin/claude-sessions
 RUN chmod +x /usr/local/bin/update-certs.sh /usr/local/bin/ensure-claude-cli.sh \
       /usr/local/bin/claude-launch /usr/local/bin/claude-sessions
 
@@ -44,7 +44,7 @@ ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 
 # Force UTF-8 character-set mode in xterm.js (VS Code terminal) for every interactive bash session.
-RUN printf '\033%%G' >> /home/node/.bashrc
+RUN echo "printf '\\033%%G'" >> /home/node/.bashrc
 
 WORKDIR /workspace
 USER root

@@ -11,10 +11,10 @@ on:
     branches: [main, master]
     paths:
       - Dockerfile
-      - scripts/update-certs.sh
-      - scripts/ensure-claude-cli.sh
-      - scripts/menu.sh
-      - scripts/sessions.js
+      - scripts/builds/update-certs.sh
+      - scripts/builds/ensure-claude-cli.sh
+      - scripts/builds/menu.sh
+      - scripts/builds/sessions.js
       - claude-defaults/**
   workflow_dispatch:
 
