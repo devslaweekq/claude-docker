@@ -21,6 +21,8 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -34,7 +36,8 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      - name: Build
+        run: bash ./scripts/docker/build.sh --claude
+
+      - name: Push
         run: bash ./scripts/docker/push.sh --claude
