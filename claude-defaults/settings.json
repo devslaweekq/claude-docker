@@ -35,5 +35,6 @@
   "skipWorkflowUsageWarning": true,
   "spinnerTipsEnabled": false,
   "theme": "dark-ansi",
-  "verbose": false
+  "verbose": false,
+  "viewMode": "focus"
 }
