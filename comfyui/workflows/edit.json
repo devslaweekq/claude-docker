@@ -2,27 +2,27 @@
   "config": {},
   "extra": {
     "ds": {
-      "offset": [613.5273901120586, 132.7105083146808],
-      "scale": 0.9090909090909091
+      "offset": [653.1858716599447, 139.36881911013057],
+      "scale": 0.7513148009015777
     }
   },
   "groups": [
     {
-      "bounding": [-319.64843750000006, 710.824751420454, 394.44158380681813, 455.49094460227275],
+      "bounding": [-463.2053662109373, 825.6105033735795, 394.44158380681813, 455.49094460227275],
       "color": "#3f789e",
       "flags": {},
       "id": 1,
-      "title": "1. Upload source photo"
+      "title": "1. Upload source photo (resized to 1024×1024)"
     },
     {
-      "bounding": [138.87340198863635, 62.723721590909115, 504.06711647727275, 702.2423206676136],
+      "bounding": [138.87340198863635, 62.723721590909115, 524.0711106178978, 810.7890101207387],
       "color": "#8A8",
       "flags": {},
       "id": 2,
       "title": "2. Describe ONLY what to change (everything else stays original)"
     },
     {
-      "bounding": [731.5218838778408, 291.4141068892046, 445.66486150568176, 795.6530095880682],
+      "bounding": [731.5218838778408, 291.4141068892046, 493.7446368963067, 703.2563933771308],
       "color": "#a1309b",
       "flags": {},
       "id": 3,
@@ -30,8 +30,8 @@
     }
   ],
   "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "last_link_id": 88,
-  "last_node_id": 73,
+  "last_link_id": 89,
+  "last_node_id": 74,
   "links": [
     [73, 70, 0, 65, 0, "LATENT"],
     [74, 63, 0, 65, 1, "VAE"],
@@ -41,237 +41,14 @@
     [81, 62, 0, 71, 0, "CLIP"],
     [82, 71, 0, 70, 2, "CONDITIONING"],
     [83, 66, 0, 70, 0, "MODEL"],
-    [84, 72, 0, 73, 0, "IMAGE"],
+    [84, 74, 0, 73, 0, "IMAGE"],
     [85, 63, 0, 73, 1, "VAE"],
     [86, 73, 0, 70, 3, "LATENT"],
-    [87, 72, 0, 67, 3, "IMAGE"],
-    [88, 63, 0, 67, 2, "VAE"]
+    [87, 74, 0, 67, 3, "IMAGE"],
+    [88, 63, 0, 67, 2, "VAE"],
+    [89, 72, 0, 74, 0, "IMAGE"]
   ],
   "nodes": [
-    {
-      "flags": {},
-      "id": 71,
-      "inputs": [
-        {
-          "link": 81,
-          "localized_name": "clip",
-          "name": "clip",
-          "type": "CLIP"
-        },
-        {
-          "link": null,
-          "localized_name": "image_encoder",
-          "name": "image_encoder",
-          "shape": 7,
-          "type": "CLIP_VISION"
-        },
-        {
-          "link": null,
-          "localized_name": "vae",
-          "name": "vae",
-          "shape": 7,
-          "type": "VAE"
-        },
-        {
-          "link": null,
-          "localized_name": "image1",
-          "name": "image1",
-          "shape": 7,
-          "type": "IMAGE"
-        },
-        {
-          "link": null,
-          "localized_name": "image2",
-          "name": "image2",
-          "shape": 7,
-          "type": "IMAGE"
-        },
-        {
-          "link": null,
-          "localized_name": "image3",
-          "name": "image3",
-          "shape": 7,
-          "type": "IMAGE"
-        },
-        {
-          "link": null,
-          "localized_name": "prompt",
-          "name": "prompt",
-          "type": "STRING",
-          "widget": {
-            "name": "prompt"
-          }
-        },
-        {
-          "link": null,
-          "localized_name": "auto_resize_images",
-          "name": "auto_resize_images",
-          "type": "BOOLEAN",
-          "widget": {
-            "name": "auto_resize_images"
-          }
-        }
-      ],
-      "mode": 0,
-      "order": 4,
-      "outputs": [
-        {
-          "links": [82],
-          "localized_name": "CONDITIONING",
-          "name": "CONDITIONING",
-          "type": "CONDITIONING"
-        }
-      ],
-      "pos": [178.8734128139798, 452.72377524009374],
-      "properties": {
-        "Node name for S&R": "TextEncodeZImageOmni",
-        "cnr_id": "comfy-core"
-      },
-      "size": [405.46875, 280],
-      "title": "Negative (block unwanted changes — do not edit)",
-      "type": "TextEncodeZImageOmni",
-      "widgets_values": [
-        "unwanted changes, altered subjects, modified people, changed faces, different objects, replaced items, restyled products, identity change, face swap, pose change, color shift on subjects, texture change, shape change, redesign, retouching, beautification, plastic look, distorted anatomy, deformed objects, blurred details, cropped elements, missing subjects, low quality, blurry, watermark, text",
-        true
-      ]
-    },
-    {
-      "flags": {},
-      "id": 67,
-      "inputs": [
-        {
-          "link": 79,
-          "localized_name": "clip",
-          "name": "clip",
-          "type": "CLIP"
-        },
-        {
-          "link": null,
-          "localized_name": "image_encoder",
-          "name": "image_encoder",
-          "shape": 7,
-          "type": "CLIP_VISION"
-        },
-        {
-          "link": 88,
-          "localized_name": "vae",
-          "name": "vae",
-          "shape": 7,
-          "type": "VAE"
-        },
-        {
-          "link": 87,
-          "localized_name": "image1",
-          "name": "image1",
-          "shape": 7,
-          "type": "IMAGE"
-        },
-        {
-          "link": null,
-          "localized_name": "image2",
-          "name": "image2",
-          "shape": 7,
-          "type": "IMAGE"
-        },
-        {
-          "link": null,
-          "localized_name": "image3",
-          "name": "image3",
-          "shape": 7,
-          "type": "IMAGE"
-        },
-        {
-          "link": null,
-          "localized_name": "prompt",
-          "name": "prompt",
-          "type": "STRING",
-          "widget": {
-            "name": "prompt"
-          }
-        },
-        {
-          "link": null,
-          "localized_name": "auto_resize_images",
-          "name": "auto_resize_images",
-          "type": "BOOLEAN",
-          "widget": {
-            "name": "auto_resize_images"
-          }
-        }
-      ],
-      "mode": 0,
-      "order": 6,
-      "outputs": [
-        {
-          "links": [76],
-          "localized_name": "CONDITIONING",
-          "name": "CONDITIONING",
-          "type": "CONDITIONING"
-        }
-      ],
-      "pos": [179.93678086953534, 179.18536378176063],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "Node name for S&R": "TextEncodeZImageOmni"
-      },
-      "size": [410, 320],
-      "title": "Positive — edit instructions",
-      "type": "TextEncodeZImageOmni",
-      "widgets_values": [
-        "Edit this photo. CRITICAL: preserve at least 70% of the original image exactly as in the reference. Keep every person, face, body, pose, clothing, object, product, texture, color, shape, lighting on subjects, composition, and proportion unchanged unless explicitly listed below. Do not retouch, beautify, restyle, replace, or alter anything that is not requested. Only apply these changes: [YOUR EDITS HERE]. Everything not listed must remain pixel-identical to the reference image.",
-        true
-      ]
-    },
-    {
-      "flags": {},
-      "id": 72,
-      "inputs": [
-        {
-          "link": null,
-          "localized_name": "image",
-          "name": "image",
-          "type": "COMBO",
-          "widget": {
-            "name": "image"
-          }
-        },
-        {
-          "link": null,
-          "localized_name": "choose file to upload",
-          "name": "upload",
-          "type": "IMAGEUPLOAD",
-          "widget": {
-            "name": "upload"
-          }
-        }
-      ],
-      "mode": 0,
-      "order": 3,
-      "outputs": [
-        {
-          "links": [84, 87],
-          "localized_name": "IMAGE",
-          "name": "IMAGE",
-          "slot_index": 0,
-          "type": "IMAGE"
-        },
-        {
-          "links": null,
-          "localized_name": "MASK",
-          "name": "MASK",
-          "type": "MASK"
-        }
-      ],
-      "pos": [-280.545098143218, 819.5524197325029],
-      "properties": {
-        "Node name for S&R": "LoadImage",
-        "cnr_id": "comfy-core"
-      },
-      "size": [315, 314],
-      "title": "Source photo",
-      "type": "LoadImage",
-      "widgets_values": ["example.png", "image"]
-    },
     {
       "flags": {},
       "id": 66,
@@ -296,7 +73,7 @@
         }
       ],
       "mode": 0,
-      "order": 1,
+      "order": 0,
       "outputs": [
         {
           "links": [83],
@@ -355,7 +132,7 @@
         }
       ],
       "mode": 0,
-      "order": 2,
+      "order": 1,
       "outputs": [
         {
           "links": [79, 81],
@@ -379,44 +156,6 @@
       "size": [340, 169.3125],
       "type": "CLIPLoader",
       "widgets_values": ["qwen_3_4b.safetensors", "qwen_image", "default"]
-    },
-    {
-      "flags": {},
-      "id": 73,
-      "inputs": [
-        {
-          "link": 84,
-          "localized_name": "pixels",
-          "name": "pixels",
-          "type": "IMAGE"
-        },
-        {
-          "link": 85,
-          "localized_name": "vae",
-          "name": "vae",
-          "type": "VAE"
-        }
-      ],
-      "mode": 0,
-      "order": 5,
-      "outputs": [
-        {
-          "links": [86],
-          "localized_name": "LATENT",
-          "name": "LATENT",
-          "slot_index": 0,
-          "type": "LATENT"
-        }
-      ],
-      "pos": [266.72501346095265, 816.0669346941314],
-      "properties": {
-        "Node name for S&R": "VAEEncode",
-        "cnr_id": "comfy-core"
-      },
-      "size": [210, 96],
-      "title": "Encode photo to latent",
-      "type": "VAEEncode",
-      "widgets_values": []
     },
     {
       "flags": {},
@@ -502,7 +241,7 @@
         }
       ],
       "mode": 0,
-      "order": 7,
+      "order": 8,
       "outputs": [
         {
           "links": [73],
@@ -536,7 +275,7 @@
         }
       ],
       "mode": 0,
-      "order": 0,
+      "order": 2,
       "outputs": [
         {
           "links": [74, 85, 88],
@@ -579,7 +318,7 @@
         }
       ],
       "mode": 0,
-      "order": 8,
+      "order": 9,
       "outputs": [
         {
           "links": [80],
@@ -619,7 +358,7 @@
         }
       ],
       "mode": 0,
-      "order": 9,
+      "order": 10,
       "outputs": [
         {
           "links": null,
@@ -636,6 +375,336 @@
       "size": [300, 420],
       "type": "SaveImage",
       "widgets_values": ["edit"]
+    },
+    {
+      "flags": {},
+      "id": 72,
+      "inputs": [
+        {
+          "link": null,
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 3,
+      "outputs": [
+        {
+          "links": [89],
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "slot_index": 0,
+          "type": "IMAGE"
+        },
+        {
+          "links": null,
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK"
+        }
+      ],
+      "pos": [-424.10202685415527, 934.3381716856284],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "LoadImage"
+      },
+      "size": [315, 314],
+      "title": "Source photo",
+      "type": "LoadImage",
+      "widgets_values": ["photo_2024-10-20_19-48-35.jpg", "image"]
+    },
+    {
+      "flags": {},
+      "id": 67,
+      "inputs": [
+        {
+          "link": 79,
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP"
+        },
+        {
+          "link": null,
+          "localized_name": "image_encoder",
+          "name": "image_encoder",
+          "shape": 7,
+          "type": "CLIP_VISION"
+        },
+        {
+          "link": 88,
+          "localized_name": "vae",
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE"
+        },
+        {
+          "link": 87,
+          "localized_name": "image1",
+          "name": "image1",
+          "shape": 7,
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "image2",
+          "name": "image2",
+          "shape": 7,
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "image3",
+          "name": "image3",
+          "shape": 7,
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "prompt",
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "auto_resize_images",
+          "name": "auto_resize_images",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "auto_resize_images"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 7,
+      "outputs": [
+        {
+          "links": [76],
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING"
+        }
+      ],
+      "pos": [189.6268248148478, 146.62525635988564],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "TextEncodeZImageOmni"
+      },
+      "size": [410, 320],
+      "title": "Positive — edit instructions",
+      "type": "TextEncodeZImageOmni",
+      "widgets_values": [
+        "Edit this photo. CRITICAL: preserve at least 70% of the original image exactly as in the reference. Keep every person, face, body, pose, clothing, object, product, texture, color, shape, lighting on subjects, composition, and proportion unchanged unless explicitly listed below. Do not retouch, beautify, restyle, replace, or alter anything that is not requested. Only apply these changes: [YOUR EDITS HERE]. Everything not listed must remain pixel-identical to the reference image.",
+        false
+      ]
+    },
+    {
+      "flags": {},
+      "id": 74,
+      "inputs": [
+        {
+          "link": 89,
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "upscale_method",
+          "name": "upscale_method",
+          "type": "COMBO",
+          "widget": {
+            "name": "upscale_method"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "crop",
+          "name": "crop",
+          "type": "COMBO",
+          "widget": {
+            "name": "crop"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 5,
+      "outputs": [
+        {
+          "links": [84, 87],
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "slot_index": 0,
+          "type": "IMAGE"
+        }
+      ],
+      "pos": [40.255966796875, 968.4580447325031],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "ImageScale"
+      },
+      "size": [315, 170],
+      "title": "Resize to 1024×1024 (model requirement)",
+      "type": "ImageScale",
+      "widgets_values": ["area", 1024, 1024, "center"]
+    },
+    {
+      "flags": {},
+      "id": 73,
+      "inputs": [
+        {
+          "link": 84,
+          "localized_name": "pixels",
+          "name": "pixels",
+          "type": "IMAGE"
+        },
+        {
+          "link": 85,
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE"
+        }
+      ],
+      "mode": 0,
+      "order": 6,
+      "outputs": [
+        {
+          "links": [86],
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "slot_index": 0,
+          "type": "LATENT"
+        }
+      ],
+      "pos": [443.76491092188996, 968.702999147256],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "VAEEncode"
+      },
+      "size": [210, 96],
+      "title": "Encode photo to latent",
+      "type": "VAEEncode",
+      "widgets_values": []
+    },
+    {
+      "flags": {},
+      "id": 71,
+      "inputs": [
+        {
+          "link": 81,
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP"
+        },
+        {
+          "link": null,
+          "localized_name": "image_encoder",
+          "name": "image_encoder",
+          "shape": 7,
+          "type": "CLIP_VISION"
+        },
+        {
+          "link": null,
+          "localized_name": "vae",
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE"
+        },
+        {
+          "link": null,
+          "localized_name": "image1",
+          "name": "image1",
+          "shape": 7,
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "image2",
+          "name": "image2",
+          "shape": 7,
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "image3",
+          "name": "image3",
+          "shape": 7,
+          "type": "IMAGE"
+        },
+        {
+          "link": null,
+          "localized_name": "prompt",
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "auto_resize_images",
+          "name": "auto_resize_images",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "auto_resize_images"
+          }
+        }
+      ],
+      "mode": 0,
+      "order": 4,
+      "outputs": [
+        {
+          "links": [82],
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING"
+        }
+      ],
+      "pos": [206.9881882046048, 556.7471443807187],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "TextEncodeZImageOmni"
+      },
+      "size": [405.46875, 280],
+      "title": "Negative (block unwanted changes — do not edit)",
+      "type": "TextEncodeZImageOmni",
+      "widgets_values": [
+        "unwanted changes, altered subjects, modified people, changed faces, different objects, replaced items, restyled products, identity change, face swap, pose change, color shift on subjects, texture change, shape change, redesign, retouching, beautification, plastic look, distorted anatomy, deformed objects, blurred details, cropped elements, missing subjects, low quality, blurry, watermark, text",
+        true
+      ]
     }
   ],
   "revision": 0,
