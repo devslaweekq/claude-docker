@@ -6,7 +6,7 @@
 #   launcher --build    — local docker compose build (test changes, no push)
 #   launcher --pull     — pull latest image from Docker Hub, then start
 #   launcher --comfyui  — start ComfyUI Docker service before session, stop it on exit
-#   launcher --install  — add launcher to PATH (auto claude, or pick name if claude exists)
+#   launcher --install [--force] — add launcher to PATH (auto claude, or pick name if claude exists); --force re-runs install
 #   launcher <args…>    — passthrough: run `claude <args…>` in the container, then exit
 #                         (e.g. `claude auth status`, `claude login`, `claude setup-token`)
 #
@@ -27,7 +27,7 @@ LAUNCHER="$SELF"
 [ -x "$INSTALL_DIR/launcher" ] && LAUNCHER="$INSTALL_DIR/launcher"
 
 # Keep in sync with version in package.json
-LAUNCHER_VERSION="1.3.3"
+LAUNCHER_VERSION="1.3.4"
 
 if [ "${1:-}" = "-v" ] || [ "${1:-}" = "--version" ]; then
   echo "claude-docker $LAUNCHER_VERSION"
@@ -35,21 +35,37 @@ if [ "${1:-}" = "-v" ] || [ "${1:-}" = "--version" ]; then
 fi
 
 if [ "${1:-}" = "--install" ]; then
+  force_install=0
+  [ "${2:-}" = "--force" ] && force_install=1
+
   [ -d "$HOME/.local/bin" ] || mkdir -p "$HOME/.local/bin"
+  _launcher_real="$(readlink -f "$LAUNCHER")"
+
+  _remove_launcher_symlinks() {
+    local _f
+    for _f in "$HOME/.local/bin/"*; do
+      [ -L "$_f" ] || continue
+      [ "$(readlink -f "$_f" 2>/dev/null || true)" = "$_launcher_real" ] || continue
+      rm -f "$_f"
+    done
+  }
 
   # If a symlink in ~/.local/bin already points to this launcher, just refresh it silently
-  _existing_cmd=""
-  for _f in "$HOME/.local/bin/"*; do
-    [ -L "$_f" ] || continue
-    [ "$(readlink -f "$_f" 2>/dev/null || true)" = "$(readlink -f "$LAUNCHER")" ] || continue
-    _existing_cmd="$(basename "$_f")"
-    break
-  done
-  if [ -n "$_existing_cmd" ]; then
-    ln -sf "$LAUNCHER" "$HOME/.local/bin/$_existing_cmd"
-    echo "OK: $HOME/.local/bin/$_existing_cmd -> $LAUNCHER (updated)"
-    echo "$_existing_cmd" > /tmp/claude-docker-chosen-cmd 2>/dev/null || true
-    exit 0
+  if [ "$force_install" -eq 0 ]; then
+    _existing_cmd=""
+    for _f in "$HOME/.local/bin/"*; do
+      [ -L "$_f" ] || continue
+      [ "$(readlink -f "$_f" 2>/dev/null || true)" = "$_launcher_real" ] || continue
+      _existing_cmd="$(basename "$_f")"
+      break
+    done
+    if [ -n "$_existing_cmd" ]; then
+      _remove_launcher_symlinks
+      ln -sf "$LAUNCHER" "$HOME/.local/bin/$_existing_cmd"
+      echo "OK: $HOME/.local/bin/$_existing_cmd -> $LAUNCHER (updated)"
+      echo "$_existing_cmd" > /tmp/claude-docker-chosen-cmd 2>/dev/null || true
+      exit 0
+    fi
   fi
 
   native_cli=0
@@ -66,7 +82,7 @@ if [ "${1:-}" = "--install" ]; then
       [ -n "$native" ] && break
       [ -e "$p" ] && native="$p"
     done
-    if [ -n "$native" ] && [ "$(readlink -f "$native" 2>/dev/null || echo "$native")" != "$(readlink -f "$LAUNCHER")" ]; then
+    if [ -n "$native" ] && [ "$(readlink -f "$native" 2>/dev/null || echo "$native")" != "$_launcher_real" ]; then
       native_cli=1
       native_where="$native"
     fi
@@ -97,6 +113,7 @@ EOF
     cmd=claude
   fi
 
+  _remove_launcher_symlinks
   ln -sf "$LAUNCHER" "$HOME/.local/bin/$cmd"
   echo "OK: $HOME/.local/bin/$cmd -> $LAUNCHER"
   echo "$cmd" > /tmp/claude-docker-chosen-cmd 2>/dev/null || true
