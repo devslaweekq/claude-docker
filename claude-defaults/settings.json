@@ -1,5 +1,16 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Allow spawning subagents (Agent) for parallel research and codebase exploration",
+      "Allow WebSearch and WebFetch for documentation lookup and web research"
+    ],
+    "environment": [
+      "Local development workspaces and git repositories on this machine",
+      "Parallel subagents for research, exploration, and documentation tasks are routine"
+    ]
+  },
   "enabledPlugins": {
     "figma@claude-plugins-official": false,
     "superpowers@claude-plugins-official": true
