@@ -28,7 +28,7 @@ LAUNCHER="$SELF"
 [ -x "$INSTALL_DIR/launcher" ] && LAUNCHER="$INSTALL_DIR/launcher"
 
 # Keep in sync with version in package.json
-LAUNCHER_VERSION="1.3.7"
+LAUNCHER_VERSION="1.3.8"
 
 if [ "${1:-}" = "-v" ] || [ "${1:-}" = "--version" ]; then
   echo "claude-docker $LAUNCHER_VERSION"
@@ -231,15 +231,41 @@ if [ "$force_build" -eq 1 ]; then
     --build-arg http_proxy= --build-arg https_proxy=
 fi
 
+# Ref-count for multi-session service sharing: each session drops a PID file; last one out stops the service.
+_SVC_LOCK_DIR="${TMPDIR:-/tmp}/claude-svc-sessions"
+
+_svc_register() {
+  mkdir -p "$_SVC_LOCK_DIR/$1"
+  touch "$_SVC_LOCK_DIR/$1/$$"
+}
+
+_svc_unregister() {
+  rm -f "$_SVC_LOCK_DIR/$1/$$"
+}
+
+_svc_in_use() {
+  local dir="$_SVC_LOCK_DIR/$1" f pid
+  [ -d "$dir" ] || return 1
+  for f in "$dir"/*; do
+    [ -e "$f" ] || continue
+    pid="$(basename "$f")"
+    if kill -0 "$pid" 2>/dev/null; then
+      return 0
+    else
+      rm -f "$f"   # stale entry from a session that crashed without cleanup
+    fi
+  done
+  return 1
+}
+
 # ComfyUI: start Docker service on --comfyui (only for interactive sessions, not passthrough)
-comfyui_started=0
 if [ "$start_comfyui" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
+  _svc_register comfyui
   if curl -sf http://localhost:8188/system_stats >/dev/null 2>&1; then
     echo "==> ComfyUI already running at localhost:8188 — skipping start"
   else
     echo "==> Starting ComfyUI Docker service…"
     docker compose -f ./docker-compose.yml --profile comfyui up -d comfyui
-    comfyui_started=1
     for _i in $(seq 1 60); do
       curl -sf http://localhost:8188/system_stats >/dev/null 2>&1 && break
       sleep 2
@@ -248,14 +274,13 @@ if [ "$start_comfyui" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
   fi
 fi
 
-headroom_started=0
 if [ "$start_headroom" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
+  _svc_register headroom
   if curl -sf http://localhost:8787/readyz >/dev/null 2>&1; then
     echo "==> Headroom already running at localhost:8787 — skipping start"
   else
     echo "==> Starting Headroom Docker service…"
     docker compose -f ./docker-compose.yml --profile headroom up -d headroom
-    headroom_started=1
     for _i in $(seq 1 60); do
       curl -sf http://localhost:8787/readyz >/dev/null 2>&1 && break
       sleep 2
@@ -265,13 +290,19 @@ if [ "$start_headroom" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
 fi
 
 _cleanup_optional_services() {
-  if [ "$comfyui_started" -eq 1 ]; then
-    echo "==> Stopping ComfyUI Docker service…"
-    docker compose -f ./docker-compose.yml stop comfyui 2>/dev/null || true
+  if [ "$start_comfyui" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
+    _svc_unregister comfyui
+    if ! _svc_in_use comfyui; then
+      echo "==> Stopping ComfyUI Docker service…"
+      docker compose -f ./docker-compose.yml stop comfyui 2>/dev/null || true
+    fi
   fi
-  if [ "$headroom_started" -eq 1 ]; then
-    echo "==> Stopping Headroom Docker service…"
-    docker compose -f ./docker-compose.yml stop headroom 2>/dev/null || true
+  if [ "$start_headroom" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
+    _svc_unregister headroom
+    if ! _svc_in_use headroom; then
+      echo "==> Stopping Headroom Docker service…"
+      docker compose -f ./docker-compose.yml stop headroom 2>/dev/null || true
+    fi
   fi
 }
 trap _cleanup_optional_services EXIT
@@ -287,7 +318,7 @@ if [ ${#passthrough_args[@]} -gt 0 ]; then
     --label claude-docker.role=exec claude --exec "${passthrough_args[@]}"
 fi
 
-if [ "$comfyui_started" -eq 1 ] || [ "$headroom_started" -eq 1 ]; then
+if [ "$start_comfyui" -eq 1 ] || [ "$start_headroom" -eq 1 ]; then
   # Without exec so the shell survives to run the EXIT trap (stops optional services on session end)
   docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" "${x11_run_opts[@]}" claude "${mode_arg[@]}"
 else
