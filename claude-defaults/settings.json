@@ -17,10 +17,16 @@
     "superpowers@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/anthropics/claude-plugins-official.git"
+      }
+    },
     "thedotmack": {
       "source": {
-        "repo": "thedotmack/claude-mem",
-        "source": "github"
+        "source": "git",
+        "url": "https://github.com/thedotmack/claude-mem.git"
       }
     }
   },

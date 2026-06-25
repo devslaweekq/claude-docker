@@ -17,6 +17,13 @@ done
 # --- seed shared defaults: settings (once), mcpServers (sync from repo) ---
 DEF="${CLAUDE_DEFAULTS:-/opt/claude-defaults}"
 [ -d "$HOME/.claude" ] || mkdir -p "$HOME/.claude"
+
+# Plugin marketplaces clone via git@github.com — container has no SSH keys; use HTTPS.
+if ! git config --global --get-all url.https://github.com/.insteadof 2>/dev/null \
+     | grep -qF 'git@github.com:'; then
+  git config --global url."https://github.com/".insteadOf "git@github.com:"
+fi
+
 if [ ! -f "$HOME/.claude/settings.json" ] && [ -f "$DEF/settings.json" ]; then
   cp "$DEF/settings.json" "$HOME/.claude/settings.json"
 fi
