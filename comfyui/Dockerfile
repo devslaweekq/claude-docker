@@ -13,7 +13,7 @@ RUN pip3 install --no-cache-dir --break-system-packages \
     --index-url https://download.pytorch.org/whl/cu130
 
 WORKDIR /opt
-RUN git clone https://github.com/Comfy-Org/ComfyUI ComfyUI \
+RUN git clone --depth 1 --branch v0.26.0 https://github.com/Comfy-Org/ComfyUI ComfyUI \
     && cd ComfyUI && pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
 RUN mkdir -p /opt/ComfyUI/user/default/workflows
