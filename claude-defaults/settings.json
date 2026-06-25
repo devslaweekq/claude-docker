@@ -12,8 +12,17 @@
     ]
   },
   "enabledPlugins": {
+    "claude-mem@thedotmack": true,
     "figma@claude-plugins-official": false,
     "superpowers@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "thedotmack": {
+      "source": {
+        "repo": "thedotmack/claude-mem",
+        "source": "github"
+      }
+    }
   },
   "gitAttribution": true,
   "includeCoAuthoredBy": false,

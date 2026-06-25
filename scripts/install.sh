@@ -112,6 +112,7 @@ echo "==> Installing claude-docker to $INSTALL_DIR"
 [ -d "$INSTALL_DIR/comfyui/output" ] || mkdir -p "$INSTALL_DIR/comfyui/output"
 [ -d "$INSTALL_DIR/comfyui/user/default/workflows" ] || \
   mkdir -p "$INSTALL_DIR/comfyui/user/default/workflows"
+[ -d "$INSTALL_DIR/headroom/.headroom" ] || mkdir -p "$INSTALL_DIR/headroom/.headroom"
 chmod 700 "$INSTALL_DIR"
 
 echo "==> Downloading launcher and config"

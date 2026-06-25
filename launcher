@@ -6,6 +6,7 @@
 #   launcher --build    — local docker compose build (test changes, no push)
 #   launcher --pull     — pull latest image from Docker Hub, then start
 #   launcher --comfyui  — start ComfyUI Docker service before session, stop it on exit
+#   launcher --headroom — start Headroom proxy before session, stop it on exit
 #   launcher --install [--force] — add launcher to PATH (auto claude, or pick name if claude exists); --force re-runs install
 #   launcher <args…>    — passthrough: run `claude <args…>` in the container, then exit
 #                         (e.g. `claude auth status`, `claude login`, `claude setup-token`)
@@ -27,7 +28,7 @@ LAUNCHER="$SELF"
 [ -x "$INSTALL_DIR/launcher" ] && LAUNCHER="$INSTALL_DIR/launcher"
 
 # Keep in sync with version in package.json
-LAUNCHER_VERSION="1.3.4"
+LAUNCHER_VERSION="1.3.5"
 
 if [ "${1:-}" = "-v" ] || [ "${1:-}" = "--version" ]; then
   echo "claude-docker $LAUNCHER_VERSION"
@@ -127,6 +128,9 @@ CLAUDE_HOME="${CLAUDE_HOME:-$HOME/claude-docker/home}"
 export CLAUDE_HOME
 COMFYUI_HOME="${COMFYUI_HOME:-$(dirname "$CLAUDE_HOME")/comfyui}"
 export COMFYUI_HOME
+HEADROOM_HOME="${HEADROOM_HOME:-$(dirname "$CLAUDE_HOME")/headroom}"
+export HEADROOM_HOME
+[ -d "$HEADROOM_HOME/.headroom" ] || mkdir -p "$HEADROOM_HOME/.headroom"
 
 if [ ! -f .env ]; then
   echo "Missing .env — copy .env.example, set PROJECT_DIRS, then retry:" >&2
@@ -137,14 +141,16 @@ fi
 force_pull=0
 force_build=0
 start_comfyui=0
+start_headroom=0
 passthrough_args=()                           # claude args forwarded into the container (claude auth status, login, …)
 
 for a in "$@"; do
   case "$a" in
-    --pull)     force_pull=1 ;;
-    --build)    force_build=1 ;;
-    --comfyui)  start_comfyui=1 ;;
-    *)          passthrough_args+=("$a") ;;
+    --pull)      force_pull=1 ;;
+    --build)     force_build=1 ;;
+    --comfyui)   start_comfyui=1 ;;
+    --headroom)  start_headroom=1 ;;
+    *)           passthrough_args+=("$a") ;;
   esac
 done
 
@@ -242,13 +248,33 @@ if [ "$start_comfyui" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
   fi
 fi
 
-_cleanup_comfyui() {
+headroom_started=0
+if [ "$start_headroom" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
+  if curl -sf http://localhost:8787/readyz >/dev/null 2>&1; then
+    echo "==> Headroom already running at localhost:8787 — skipping start"
+  else
+    echo "==> Starting Headroom Docker service…"
+    docker compose -f ./docker-compose.yml --profile headroom up -d headroom
+    headroom_started=1
+    for _i in $(seq 1 60); do
+      curl -sf http://localhost:8787/readyz >/dev/null 2>&1 && break
+      sleep 2
+    done
+    echo "    Headroom ready at localhost:8787"
+  fi
+fi
+
+_cleanup_optional_services() {
   if [ "$comfyui_started" -eq 1 ]; then
     echo "==> Stopping ComfyUI Docker service…"
     docker compose -f ./docker-compose.yml stop comfyui 2>/dev/null || true
   fi
+  if [ "$headroom_started" -eq 1 ]; then
+    echo "==> Stopping Headroom Docker service…"
+    docker compose -f ./docker-compose.yml stop headroom 2>/dev/null || true
+  fi
 }
-trap _cleanup_comfyui EXIT
+trap _cleanup_optional_services EXIT
 
 # Passthrough: forward any unrecognized args straight to `claude` in a throwaway container,
 # then exit with claude's status. Reserved flags (--install/--pull/--build) never reach here.
@@ -261,8 +287,8 @@ if [ ${#passthrough_args[@]} -gt 0 ]; then
     --label claude-docker.role=exec claude --exec "${passthrough_args[@]}"
 fi
 
-if [ "$comfyui_started" -eq 1 ]; then
-  # Without exec so the shell survives to run the EXIT trap (stops ComfyUI on session end)
+if [ "$comfyui_started" -eq 1 ] || [ "$headroom_started" -eq 1 ]; then
+  # Without exec so the shell survives to run the EXIT trap (stops optional services on session end)
   docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" "${x11_run_opts[@]}" claude "${mode_arg[@]}"
 else
   exec docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" "${x11_run_opts[@]}" claude "${mode_arg[@]}"

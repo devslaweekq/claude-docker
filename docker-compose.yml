@@ -18,6 +18,7 @@ services:
       - ./certs:/tmp/certs-input:ro
       # /workspace/<name> mounts are passed dynamically by the launcher via -v flags (PROJECT_DIRS)
 
+  # ComfyUI — host network, listens on localhost:8188 (see PORTS.md)
   comfyui:
     image: slaweekq/comfyui:latest
     labels:
@@ -36,4 +37,18 @@ services:
       - ${COMFYUI_HOME}/models:/opt/ComfyUI/models
       - ${COMFYUI_HOME}/output:/opt/ComfyUI/output
       - ${COMFYUI_HOME}/user:/opt/ComfyUI/user
+    restart: 'no'
+
+  # Headroom proxy — host network, listens on localhost:8787 (see PORTS.md)
+  headroom:
+    image: ghcr.io/chopratejas/headroom:latest
+    labels:
+      - claude-docker.role=headroom
+    profiles:
+      - headroom
+    network_mode: host
+    environment:
+      - HEADROOM_HOST=0.0.0.0
+    volumes:
+      - ${HEADROOM_HOME}/.headroom:/home/nonroot/.headroom
     restart: 'no'

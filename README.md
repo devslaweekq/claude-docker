@@ -69,6 +69,7 @@ First run pulls the image from Docker Hub automatically.
 | `./launcher --pull`         | Pull the latest image, then start                               |
 | `./launcher --build`        | Build the image locally (maintainers)                           |
 | `./launcher --comfyui`      | Start ComfyUI (Docker, GPU) before the session, stop it on exit |
+| `./launcher --headroom`     | Start Headroom proxy before the session, stop it on exit        |
 | `./launcher --install`      | Add a command to your PATH                                      |
 | `./launcher <claude args…>` | Passthrough — run `claude <args…>` in the container, then exit  |
 
@@ -220,6 +221,22 @@ A **Z-Image Turbo** txt2img workflow (`default.json`) is pre-installed in `user/
 
 ---
 
+## Headroom — context compression proxy
+
+Run [Headroom](https://github.com/headroomlabs-ai/headroom) locally in Docker as an LLM proxy that compresses tool outputs, logs, and context before they reach the model (60–95% fewer tokens). Image: `ghcr.io/chopratejas/headroom:latest`.
+
+### Start
+
+```bash
+./launcher --headroom
+```
+
+Headroom listens at `http://localhost:8787`. Point your agent or SDK at the proxy (e.g. `ANTHROPIC_BASE_URL=http://localhost:8787` for Anthropic-compatible clients). State persists in `~/claude-docker/headroom/.headroom/`.
+
+You can combine flags: `./launcher --headroom --comfyui`.
+
+---
+
 ## Authentication
 
 | Method                              | When to use                                          |
@@ -252,6 +269,8 @@ Claude Code, `git`, `gh` (GitHub CLI), `fzf`, `bun`, DB clients (`psql`, `mysql`
 | MCP server | What it connects to                                       |
 | ---------- | --------------------------------------------------------- |
 | comfyui    | Local ComfyUI server at localhost:8188 (`--comfyui` flag) |
+| claude-mem | Session memory search — `search`, `timeline`, `get_observations`; worker at localhost:37777 |
+| headroom   | Local Headroom proxy at localhost:8787 (`--headroom` flag) |
 | github     | GitHub (requires `GH_TOKEN`)                              |
 | playwright | Browser automation                                        |
 | context7   | Library docs (requires `CONTEXT7_API_KEY`)                |
@@ -277,6 +296,8 @@ Plugins pre-installed: [superpowers](https://github.com/anthropics/claude-code-s
 | `JIRA_URL` / `JIRA_USERNAME` / `JIRA_API_TOKEN` | No              | Jira MCP                                                          |
 
 See [`.env.example`](.env.example) for the full template.
+
+Port reference for optional services (ComfyUI, Headroom): [`PORTS.md`](PORTS.md).
 
 ---
 

@@ -71,7 +71,8 @@ case "$1" in
         "$INSTALL_DIR/certs" \
         "$INSTALL_DIR/comfyui/models" \
         "$INSTALL_DIR/comfyui/output" \
-        "$INSTALL_DIR/comfyui/user/default/workflows"
+        "$INSTALL_DIR/comfyui/user/default/workflows" \
+        "$INSTALL_DIR/headroom/.headroom"
       chmod 700 "$INSTALL_DIR"
 
       install -o "$REAL_USER" -m 755 "$SHARE/launcher"           "$INSTALL_DIR/launcher"
