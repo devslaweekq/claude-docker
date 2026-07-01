@@ -4,53 +4,53 @@ Hash: SHA512
 Origin: claude-docker
 Label: claude-docker
 Codename: stable
-Date: Mon, 29 Jun 2026 08:31:22 UTC
+Date: Wed, 01 Jul 2026 10:53:19 UTC
 Architectures: amd64 arm64 i386
 Components: main
 Description: Claude Docker launcher apt repository
 MD5Sum:
- e18082c20f66190e481998277100c6ec 691 main/binary-amd64/Packages
- e9bb8c638be92cff9e7ecfc16c5b3735 474 main/binary-amd64/Packages.gz
+ ea5cf27423811e1220be92545f37a965 693 main/binary-amd64/Packages
+ 65a365f661aa5465b0fa78cd7bfa053f 475 main/binary-amd64/Packages.gz
  66c7afe176ea07be8865490e916b1f6e 130 main/binary-amd64/Release
- e18082c20f66190e481998277100c6ec 691 main/binary-arm64/Packages
- e9bb8c638be92cff9e7ecfc16c5b3735 474 main/binary-arm64/Packages.gz
+ ea5cf27423811e1220be92545f37a965 693 main/binary-arm64/Packages
+ 65a365f661aa5465b0fa78cd7bfa053f 475 main/binary-arm64/Packages.gz
  1df13dfb3c13559798123a766200d2d4 130 main/binary-arm64/Release
- e18082c20f66190e481998277100c6ec 691 main/binary-i386/Packages
- e9bb8c638be92cff9e7ecfc16c5b3735 474 main/binary-i386/Packages.gz
+ ea5cf27423811e1220be92545f37a965 693 main/binary-i386/Packages
+ 65a365f661aa5465b0fa78cd7bfa053f 475 main/binary-i386/Packages.gz
  8772a8d832a5c9c9434e0050d9a753a4 129 main/binary-i386/Release
 SHA1:
- 2c0c73487a1e39fadd12ff79b97d19e1f7fef0e5 691 main/binary-amd64/Packages
- 2cfb4452af894a7adb1f88cca6d97c1fafa9b2eb 474 main/binary-amd64/Packages.gz
+ da727edd6ed4d68b0a3c7c9135d266d2f03e054f 693 main/binary-amd64/Packages
+ 34bfcc57f1f40e120e285ed1a642f3d9ac9ebefd 475 main/binary-amd64/Packages.gz
  083a98bb3087b09f4537e332432d83dc03331a1d 130 main/binary-amd64/Release
- 2c0c73487a1e39fadd12ff79b97d19e1f7fef0e5 691 main/binary-arm64/Packages
- 2cfb4452af894a7adb1f88cca6d97c1fafa9b2eb 474 main/binary-arm64/Packages.gz
+ da727edd6ed4d68b0a3c7c9135d266d2f03e054f 693 main/binary-arm64/Packages
+ 34bfcc57f1f40e120e285ed1a642f3d9ac9ebefd 475 main/binary-arm64/Packages.gz
  8ded2f96ad8a4086e8341c5a1051eac4e5b26de0 130 main/binary-arm64/Release
- 2c0c73487a1e39fadd12ff79b97d19e1f7fef0e5 691 main/binary-i386/Packages
- 2cfb4452af894a7adb1f88cca6d97c1fafa9b2eb 474 main/binary-i386/Packages.gz
+ da727edd6ed4d68b0a3c7c9135d266d2f03e054f 693 main/binary-i386/Packages
+ 34bfcc57f1f40e120e285ed1a642f3d9ac9ebefd 475 main/binary-i386/Packages.gz
  036d77245284551e72734c4ef815331ca820fabb 129 main/binary-i386/Release
 SHA256:
- 703296cf88de6dc89ac688998123e52e48404479a50a5b5b6bdf2e5a9dbc6e67 691 main/binary-amd64/Packages
- 4d083fdf8f04242cd5322156abe570a6c40d615a83ffd047bc3f7e92037d8edb 474 main/binary-amd64/Packages.gz
+ 9c19c837ee57d58d7e7779239dd871a3419363e20e9f0f1f2703b4ec5e6703c8 693 main/binary-amd64/Packages
+ 2751f1d3e7cba197ff86b899925012ff2644793802290578571ddbcd1d94a71b 475 main/binary-amd64/Packages.gz
  dc6dcd63c9b799da753d82b8013b3bd9c79220a4917b864b0df7e97cd04db476 130 main/binary-amd64/Release
- 703296cf88de6dc89ac688998123e52e48404479a50a5b5b6bdf2e5a9dbc6e67 691 main/binary-arm64/Packages
- 4d083fdf8f04242cd5322156abe570a6c40d615a83ffd047bc3f7e92037d8edb 474 main/binary-arm64/Packages.gz
+ 9c19c837ee57d58d7e7779239dd871a3419363e20e9f0f1f2703b4ec5e6703c8 693 main/binary-arm64/Packages
+ 2751f1d3e7cba197ff86b899925012ff2644793802290578571ddbcd1d94a71b 475 main/binary-arm64/Packages.gz
  f1be64d52513b6dbb6ae4eedee46922bbadadec8d7906bb8e0a173fcd153bb76 130 main/binary-arm64/Release
- 703296cf88de6dc89ac688998123e52e48404479a50a5b5b6bdf2e5a9dbc6e67 691 main/binary-i386/Packages
- 4d083fdf8f04242cd5322156abe570a6c40d615a83ffd047bc3f7e92037d8edb 474 main/binary-i386/Packages.gz
+ 9c19c837ee57d58d7e7779239dd871a3419363e20e9f0f1f2703b4ec5e6703c8 693 main/binary-i386/Packages
+ 2751f1d3e7cba197ff86b899925012ff2644793802290578571ddbcd1d94a71b 475 main/binary-i386/Packages.gz
  3a9b78f832ac8d878efec28a8a7cc4684ce809061d406cf222b4243a675166d0 129 main/binary-i386/Release
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCgAdFiEEmy6W2yF105S14bjej9gxTql+TbYFAmpCLVoACgkQj9gxTql+
-Tba3MhAAr/fj4eThVVupcAaDxj64zg5kjZqNEAkSzxUDAuK8H/nYe61a2K5cuNAP
-i/rqeXRsr+V/w4K9mx5KotJmL29lFVinknlSgQsbrNvcZeFSLX9C2Gh4nKJVZAGf
-jv/xQxghX+vi84lJ4Kh2DhE3cI33InyHZp1sqH/L/Uo0WGOCWhHyLW1cbD0ucAIc
-D+XPyA5PzuA2yMgbx7ahedBb81u0ULsTKI8rXSkPedK2S51mBwfjN7tK9LAHB3eK
-FYxC10cyfYwR32tzhObG0wO0nT3LB5AndYPlQKX2wA3Lf9B0RpMPZyLw2TXr/2nl
-PckPvMuCY2HhH5St73uud8Xbw+Q3t/7PyZSu5VsD5CVIP2cCDNLt7hBOBwqokYMV
-+wapvBlhR4v97QMs+r7Su0AaVOaXIzjJdAoEcqC9G9qOfHyydr0o3jtBof/hWiE9
-Xm8dhaeYAJUwmHMQMOeUGGKzgX5EL11xFXONzfXNaQfRo+7eqsiqE7bruL7/19Hs
-2J3KWGdnPHSy9zOh5rv9NbDvWa2pKwvvgLIF7PXpUEHfKpmO6o1HB7hbZOjNdX8C
-Le+rV/u1e3GhQnbDKfa+JC/SCUrAPzKx8FWeK5iWXf2j5Znhbx2PxI6g7mNrFA9i
-Z6vmMpeQq+pvThWaT1AxXCmakeCg2Yw2X+hl1nk1W/ubGLRZmZE=
-=uQO+
+iQIzBAEBCgAdFiEEmy6W2yF105S14bjej9gxTql+TbYFAmpE8Z8ACgkQj9gxTql+
+TbYilhAA1tpgyrJ5ypDKWMZAj4HRyqLn0hpWxQFad1wjNySLaxnGwWcj5WoK1eq6
+Gf3PsZCK6TE3htisMXlS8hEWjTnPfS3KvOLCKSP4lqKHHsrzdqUvJcT8EL3U/+nt
+xubiTOc+bzNTTwfAwytalWmIHLour6JMpapQSHH5xgsKWwymtIVh2OKcgBnCkVsr
+gRG43/L3NtgbDZJOg8jS4F47ouXNL74BXPDrvPXNSLD2lMd/PhU2AZWmWZfn/DRI
+6eWN2gOPobUsU8ZOU8cKl+fTbpDkUZfHpKm2bFfsnB2eXGYBARuO+anxTzRaTnG6
+LFbqdzF3eyaDrD3oxZWp9tU+34VSDOoXSozSzWeRf92XEUL2ksu5sQ4axBmF3rj3
+AnpOrzeI2mf0ZSp8KANRbkaucsjPgYOVdwuUs/wVjgpw4/5PMOgeSOVQV2FCBmCG
+bOevTcZEzOXtELiFw7FIWNVVVd/1kRzPdZiTkSoU/kaktkY2M8Xhv87Mf/Dckk4G
+0DaIOyRmRTT0TKnlN+Pu6H6gma0A1fCUoP9PCS387/8HHmNaY5KDbvSRSyFT7MRb
+iEO4RMQMEjm/oeHL2D3XrVsvH58rLqTg66JSfkasjryRPRGfKXHus+5V/ztRdwRx
+wj1BFvrWbdlMgb75rJ33VcYjun6CZQXbgFXN7OQTlb6X5m+Q7NA=
+=qscC
 -----END PGP SIGNATURE-----
