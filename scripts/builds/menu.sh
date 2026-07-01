@@ -41,6 +41,18 @@ if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
   jq '.hasCompletedOnboarding = true' "$HOME/.claude.json" > "$tmp" && mv "$tmp" "$HOME/.claude.json"
 fi
 
+# claude-mem plugin requires zod v4 but doesn't bundle it — install if missing.
+_cm_dir="$HOME/.claude/plugins/cache/thedotmack/claude-mem"
+if [ -d "$_cm_dir" ]; then
+  _cm_ver=$(ls -1 "$_cm_dir" 2>/dev/null | sort -V | tail -1)
+  if [ -n "$_cm_ver" ] && [ ! -f "$_cm_dir/$_cm_ver/node_modules/zod/package.json" ]; then
+    echo "==> Fixing claude-mem plugin: installing zod …" >&2
+    (cd "$_cm_dir/$_cm_ver" && npm install zod@'^4.4.3' --no-save --ignore-scripts >/dev/null 2>&1) || true
+  fi
+  unset _cm_ver
+fi
+unset _cm_dir
+
 # workspace subdirs, newest (by mtime) first
 mapfile -t dirs < <(find "$WS" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -printf '%T@\t%p\n' 2>/dev/null | sort -rn | cut -f2-)
 
