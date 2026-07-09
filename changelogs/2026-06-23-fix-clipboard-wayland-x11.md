@@ -7,7 +7,8 @@
 #### Cyrillic (non-ASCII) text paste from container still garbled after v1.2.12
 
 Text displayed correctly inside the cladock session but pasted as garbage
-(`ÑÐµÐ¿ÐµÑÑ` instead of `теперь`) when using VS Code integrated terminal.
+(mojibake such as `ÑÐµÐ¿ÐµÑÑ` instead of the original Cyrillic text) when
+using VS Code integrated terminal.
 
 Root cause: Claude Code selects its clipboard mechanism at startup based on
 platform. Inside Docker it detects `linux`, finds no Wayland/X11 tools, and

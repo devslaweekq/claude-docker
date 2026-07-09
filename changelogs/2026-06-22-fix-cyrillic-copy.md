@@ -5,9 +5,10 @@
 ### Fixed
 
 ### Cyrillic (non-ASCII) text copy from terminal
-Copying Russian or any non-ASCII text from the cladock terminal produced garbled
-characters (`ÑÐµÐ¿ÐµÑÑ` instead of `теперь`) while English copied correctly.
-Native `claude` was not affected.
+Copying Russian or any non-ASCII text from the cladock terminal produced
+garbled characters (mojibake such as `ÑÐµÐ¿ÐµÑÑ` instead of the original
+Cyrillic text) while English copied correctly. Native `claude` was not
+affected.
 
 Root cause: `menu.sh` used `\033c` (RIS — Reset to Initial State) to clear the
 screen between menu transitions. RIS is a full terminal reset that reverts the
