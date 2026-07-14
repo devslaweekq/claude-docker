@@ -1,11 +1,5 @@
 #!/usr/bin/env node
-// claude-sessions — list Claude sessions for a project (fzf picker in menu.sh).
 // No external dependencies (built-in fs/path only). Local read + stdout only — no network.
-//
-// Modes:
-//   claude-sessions <cwd>                 -> TSV rows: "<id>\t<title>  ·  <when>  ·  <size>"
-//                                            (newest first; field 1 is id, rest is for display)
-//   claude-sessions --preview <cwd> <id>  -> short session preview (for fzf --preview)
 //
 // Sessions live in ~/.claude/projects/<encoded cwd>/<session-id>.jsonl
 // Encoding: each path segment has _ and . replaced with -, segments joined by -
@@ -177,6 +171,21 @@ if (args[0] === '--preview') {
     }
   }
   process.stdout.write(msgs.slice(-12).join('\n\n') + '\n');
+  process.exit(0);
+}
+
+if (args[0] === '--delete') {
+  const [, cwd, ...ids] = args;
+  let deleted = 0;
+  for (const id of ids) {
+    const file = sessionFile(cwd, id);
+    if (!file) continue;
+    try {
+      fs.unlinkSync(file);
+      deleted++;
+    } catch {}
+  }
+  process.stdout.write(`${deleted}\n`);
   process.exit(0);
 }
 

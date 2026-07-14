@@ -9,6 +9,7 @@
 - **NEVER push** to `main` or any branch without explicit permission in the current user message
 - **NEVER commit** — prepare everything, then give the user the commit message as plain text; committing is the user's job
 - Commit message style: `feat:` / `fix:` / `chore:` conventional commits
+- **Commit message = one line, max 100 characters.** No body, no bullet points, no multi-paragraph explanation. If more context is needed, it belongs in the changelog file, not the commit message.
 
 ## Workflow per Commit
 

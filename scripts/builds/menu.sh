@@ -115,7 +115,8 @@ make_new_dir() {
 }
 
 SESSIONS_BIN="${CLAUDE_SESSIONS_BIN:-claude-sessions}"
-NEWSESS="__NEW__"   # special id for the "new session" row in the unified list
+NEWSESS="__NEW__"      # special id for the "new session" row in the unified list
+CLEANUP="__CLEANUP__"  # special id for the "clean up old sessions" row
 
 # --- MCP server selection ---
 
@@ -211,15 +212,55 @@ mcp_onboarding() {
 
 # --- end MCP section ---
 
-# pick folder -> single page: "New session" + saved sessions (resume)
+# Multi-select cleanup of saved sessions for one project dir (fzf --multi, same style as MCP picker).
+# Only invoked from the fzf branch of start_in_dir, so fzf is guaranteed present.
+cleanup_sessions() {
+  local dir="$1" saved selected ids=() count deleted confirm
+
+  saved="$("$SESSIONS_BIN" "$dir" 2>/dev/null | sed 's/\t/\t•  /')"
+  if [ -z "$saved" ]; then
+    print_header
+    printf '  No saved sessions to clean up in %s\n' "$dir"
+    sleep 1.2
+    return
+  fi
+
+  selected="$(printf '%s\n' "$saved" \
+    | fzf --multi --height=60% --reverse --border=rounded \
+          --pointer='▶' --marker='✓' \
+          --color='pointer:208,prompt:208,marker:208' \
+          --delimiter='\t' --with-nth=2 \
+          --prompt="$(basename "$dir") cleanup ▸ " \
+          --header='Tab — mark for deletion · Ctrl+A — all · Enter — confirm · Esc — cancel' \
+          --bind='ctrl-a:toggle-all' \
+          --preview="$SESSIONS_BIN --preview '$dir' {1}" \
+          --preview-window='down:45%:wrap')" || selected=""
+
+  [ -z "$selected" ] && return
+  mapfile -t ids < <(printf '%s\n' "$selected" | cut -f1)
+  count=${#ids[@]}
+  [ "$count" -eq 0 ] && return
+
+  read -rp "  Delete $count session(s)? [y/N] " confirm
+  case "${confirm,,}" in
+    y|yes) ;;
+    *) return ;;
+  esac
+
+  deleted="$("$SESSIONS_BIN" --delete "$dir" "${ids[@]}")"
+  printf '  Deleted %s of %d session(s).\n' "$deleted" "$count"
+  sleep 1
+}
+
+# pick folder -> single page: "New session" + saved sessions (resume) + cleanup
 # optional --back-on-esc: Esc returns to caller instead of exiting the container
 start_in_dir() {
   local back_on_esc=0
   [ "${2:-}" = "--back-on-esc" ] && back_on_esc=1
 
   cd "$1"
-  print_header
   if ! command -v fzf >/dev/null 2>&1; then
+    print_header
     echo
     echo "  1) New session"
     echo "  2) Resume (pick from history)"
@@ -234,26 +275,36 @@ start_in_dir() {
   fi
 
   local list line id saved
-  list="$NEWSESS"$'\t'"•  New session"
-  if command -v "$SESSIONS_BIN" >/dev/null 2>&1; then
-    saved="$("$SESSIONS_BIN" "$1" | sed 's/\t/\t•  /')"
-    [ -n "$saved" ] && list="$list"$'\n'"$saved"
-  fi
+  while true; do
+    print_header
+    list="$NEWSESS"$'\t'"•  New session"
+    if command -v "$SESSIONS_BIN" >/dev/null 2>&1; then
+      saved="$("$SESSIONS_BIN" "$1" | sed 's/\t/\t•  /')"
+      if [ -n "$saved" ]; then
+        list="$list"$'\n'"$saved"
+        list="$list"$'\n'"$CLEANUP"$'\t'"🧹  Clean up old sessions…"
+      fi
+    fi
 
-  line="$(printf '%s\n' "$list" \
-    | fzf --height=60% --reverse --border=rounded --pointer='▶' \
-          --color='pointer:208,prompt:208' \
-          --delimiter='\t' --with-nth=2 \
-          --prompt="$(basename "$1") ▸ " \
-          --header='new session or resume · Enter · Esc — back' \
-          --preview="[ {1} = $NEWSESS ] && echo '  New session in $1' || $SESSIONS_BIN --preview '$1' {1}" \
-          --preview-window='down:45%:wrap' --no-multi)" || line=""
-  if [ -z "$line" ]; then
-    [ "$back_on_esc" -eq 1 ] && return 0
-    exit 0
-  fi
-  id="${line%%$'\t'*}"
-  if [ "$id" = "$NEWSESS" ]; then run_claude; else run_claude --resume "$id"; fi
+    line="$(printf '%s\n' "$list" \
+      | fzf --height=60% --reverse --border=rounded --pointer='▶' \
+            --color='pointer:208,prompt:208' \
+            --delimiter='\t' --with-nth=2 \
+            --prompt="$(basename "$1") ▸ " \
+            --header='new session or resume · Enter · Esc — back' \
+            --preview="[ {1} = $NEWSESS ] && echo '  New session in $1' || [ {1} = $CLEANUP ] && echo '  Clean up saved sessions' || $SESSIONS_BIN --preview '$1' {1}" \
+            --preview-window='down:45%:wrap' --no-multi)" || line=""
+    if [ -z "$line" ]; then
+      [ "$back_on_esc" -eq 1 ] && return 0
+      exit 0
+    fi
+    id="${line%%$'\t'*}"
+    case "$id" in
+      "$NEWSESS")  run_claude ;;
+      "$CLEANUP")  cleanup_sessions "$1" ;;
+      *)           run_claude --resume "$id" ;;
+    esac
+  done
 }
 
 # temporary (scratch) session; optional $1 — note shown before start
