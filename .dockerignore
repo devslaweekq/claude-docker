@@ -1,29 +1,11 @@
-# exclude from build context (secrets and host state)
-.github
-.omc
-.vscode
-certs
-features
-node_modules
-scripts/*.sh
-!scripts/menu.sh
-!scripts/update-certs.sh
-!scripts/ensure-claude-cli.sh
+# Ignore everything by default — only allow what the Docker build actually
+# needs (see Dockerfile's COPY lines). Simpler than maintaining a deny-list,
+# and doesn't silently rot when files move (scripts/*.sh here used to
+# reference paths that no longer exist after scripts/builds/ was split out).
+*
 
-.cursorignore
-.editorconfig
-.gitignore
-.prettierignore
-.prettierrc
-CODEOWNERS
-docker-compose.dev.yml
-docker-compose.yml
-INSTALL.md
-package-lock.json
-package.json
-README.md
-
-.claude/
-.claude.json
-.env
-.env.example
+!scripts/
+!scripts/builds/
+!scripts/builds/**
+!claude-defaults/
+!claude-defaults/**

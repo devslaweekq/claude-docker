@@ -110,6 +110,7 @@ echo "==> Installing claude-docker to $INSTALL_DIR"
 [ -d "$INSTALL_DIR/certs" ] || mkdir -p "$INSTALL_DIR/certs"
 [ -d "$INSTALL_DIR/comfyui/models" ] || mkdir -p "$INSTALL_DIR/comfyui/models"
 [ -d "$INSTALL_DIR/comfyui/output" ] || mkdir -p "$INSTALL_DIR/comfyui/output"
+[ -d "$INSTALL_DIR/comfyui/venv" ] || mkdir -p "$INSTALL_DIR/comfyui/venv"
 [ -d "$INSTALL_DIR/comfyui/user/default/workflows" ] || \
   mkdir -p "$INSTALL_DIR/comfyui/user/default/workflows"
 [ -d "$INSTALL_DIR/headroom/.headroom" ] || mkdir -p "$INSTALL_DIR/headroom/.headroom"

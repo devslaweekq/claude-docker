@@ -1,0 +1,7 @@
+# Ignore everything by default — only allow what the Docker build actually
+# needs (see comfyui/Dockerfile's COPY lines).
+*
+
+!entrypoint.sh
+!workflows/
+!workflows/**

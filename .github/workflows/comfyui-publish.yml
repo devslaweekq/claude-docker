@@ -11,6 +11,7 @@ on:
     branches: [main, master]
     paths:
       - comfyui/Dockerfile
+      - comfyui/entrypoint.sh
       - comfyui/workflows/**
   workflow_dispatch:
 
@@ -22,6 +23,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      # The image is now thin (torch/ComfyUI deps install into a mounted
+      # volume at container start, not into image layers), but keep this —
+      # ubuntu-latest ships ~30GB of preinstalled toolchains we don't use,
+      # and buildx still needs headroom for the base image + build cache.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+          docker system prune -af --volumes
+          df -h
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4

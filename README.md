@@ -198,6 +198,14 @@ Run [ComfyUI](https://github.com/Comfy-Org/ComfyUI) locally in Docker with GPU a
 
 Claude will have access to ComfyUI at `http://localhost:8188` via MCP. The web UI is also available in your browser.
 
+**First run installs torch + ComfyUI's Python deps** into `~/claude-docker/comfyui/venv/`
+(a few GB, takes a few minutes) — the pushed image itself is thin and doesn't bundle
+them. Every start after that reuses the same venv and skips straight to launching —
+`entrypoint.sh` keys the install on a hash of `requirements.txt` + the torch pin, so it
+reinstalls automatically whenever either changes and does nothing otherwise. To force a
+reinstall for any other reason, delete `~/claude-docker/comfyui/venv/.install-hash` (or
+the whole `venv/` folder) and restart.
+
 ### Models
 
 Place model files in `~/claude-docker/comfyui/models/` — subdirectories mirror the ComfyUI layout:
@@ -210,6 +218,7 @@ Place model files in `~/claude-docker/comfyui/models/` — subdirectories mirror
 │   ├── unet/           # e.g. z_image_turbo_bf16.safetensors
 │   └── vae/            # e.g. ae.safetensors
 ├── output/             # generated images
+├── venv/               # torch + ComfyUI deps, installed on first run — not model files
 └── user/
     └── default/
         └── workflows/  # drop .json workflow files here — they appear in ComfyUI UI instantly

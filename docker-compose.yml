@@ -37,6 +37,9 @@ services:
       - ${COMFYUI_HOME}/models:/opt/ComfyUI/models
       - ${COMFYUI_HOME}/output:/opt/ComfyUI/output
       - ${COMFYUI_HOME}/user:/opt/ComfyUI/user
+      # torch + ComfyUI deps install here on first run (entrypoint.sh), not
+      # baked into the image — persists across container recreation.
+      - ${COMFYUI_HOME}/venv:/opt/venv
     restart: 'no'
 
   # Headroom proxy — host network, listens on localhost:8787 (see PORTS.md)
