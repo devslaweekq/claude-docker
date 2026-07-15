@@ -28,6 +28,11 @@ if [ ! -f "$HOME/.claude/settings.json" ] && [ -f "$DEF/settings.json" ]; then
   cp "$DEF/settings.json" "$HOME/.claude/settings.json"
 fi
 
+# user-level CLAUDE.md (standing rules across all projects) — seed once, never overwrite user edits
+if [ ! -f "$HOME/.claude/CLAUDE.md" ] && [ -f "$DEF/CLAUDE.md" ]; then
+  cp "$DEF/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+fi
+
 # slash commands: copy any shipped command not already present (never clobber user edits)
 if [ -d "$DEF/commands" ]; then
 [ -d "$HOME/.claude/commands" ] || mkdir -p "$HOME/.claude/commands"
