@@ -1,15 +1,15 @@
 Package: claude-docker
-Version: 1.4.2
+Version: 1.4.3
 Architecture: all
 Maintainer: devslaweekq
 Depends: curl
 Priority: optional
 Section: utils
-Filename: pool/main/c/claude-docker/claude-docker_1.4.2_all.deb
+Filename: pool/main/c/claude-docker/claude-docker_1.4.3_all.deb
 Size: 10120
-SHA256: d0cc11c5b9f6e64c8f9cfd65b83066d27fbd12a690b8dfc2c3216bec13c782a8
-SHA1: a517b4fd3c3f3d0097f4427fb2c8b9d841e2f286
-MD5sum: d1d4f2a77b6d1f75cd57743012eb0307
+SHA256: 2fdc73729e6949ff25e6e878b070aadd73ba87c6c8a4f4a805feb06feb3679b2
+SHA1: 20e4b581791a70fd4e347446d982eeda6d812de1
+MD5sum: d617f856b8c71b5a36e509d53e7790ad
 Description: Isolated Claude Code in Docker
   Runs Claude Code (Anthropic AI assistant) in an isolated Docker container
   with persistent sessions, TLS support, and a project workspace mount.
