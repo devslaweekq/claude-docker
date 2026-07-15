@@ -2,7 +2,8 @@ name: ComfyUI Publish
 
 # Required repo secrets:
 #   DOCKER_USERNAME — Docker Hub login (e.g. slaweekq)
-#   DOCKER_PASSWORD — Docker Hub access token (not account password)
+#   DOCKER_PASSWORD — Docker Hub Personal Access Token with "Read, Write, Delete" scope
+#                     (not account password)
 #
 # Registry cache: slaweekq/comfyui:buildcache
 
@@ -13,6 +14,7 @@ on:
       - comfyui/Dockerfile
       - comfyui/entrypoint.sh
       - comfyui/workflows/**
+      - comfyui/README.md
   workflow_dispatch:
 
 jobs:
@@ -48,3 +50,12 @@ jobs:
 
       - name: Push
         run: bash ./scripts/docker/push.sh --comfyui
+
+      - name: Sync Docker Hub overview from comfyui/README.md
+        uses: peter-evans/dockerhub-description@v5
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ secrets.DOCKER_USERNAME }}/comfyui
+          readme-filepath: ./comfyui/README.md
+          short-description: GPU-accelerated ComfyUI in a thin Docker image, from claude-docker

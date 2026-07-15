@@ -1,10 +1,25 @@
 <p align="center">
-  <img src="assets/banner.png" alt="claude-docker" width="100%"/>
+  <img src="https://raw.githubusercontent.com/devslaweekq/claude-docker/main/assets/banner.png" alt="claude-docker" width="100%"/>
 </p>
+
+[![Release](https://github.com/devslaweekq/claude-docker/actions/workflows/deb-release.yml/badge.svg)](https://github.com/devslaweekq/claude-docker/actions/workflows/deb-release.yml)
+[![Docker Publish](https://github.com/devslaweekq/claude-docker/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/devslaweekq/claude-docker/actions/workflows/docker-publish.yml)
+[![ComfyUI Publish](https://github.com/devslaweekq/claude-docker/actions/workflows/comfyui-publish.yml/badge.svg)](https://github.com/devslaweekq/claude-docker/actions/workflows/comfyui-publish.yml)
 
 Run [Claude Code](https://docs.anthropic.com/en/docs/claude-code) in an isolated Docker container — your workspace mounted inside, persistent sessions, an fzf menu with resume, and optional corporate proxy support.
 
-**Docker image:** [`slaweekq/claude-docker:latest`](https://hub.docker.com/r/slaweekq/claude-docker)
+## Features
+
+- 🗂️ **Persistent sessions with resume** — an fzf menu over `/workspace` subdirectories, newest first, with a picker for scratch sessions and bash.
+- 🔌 **MCP servers pre-configured** — GitHub, Context7, Jira/Atlassian, Grafana, Sentry, Playwright, Kubernetes, and [ComfyUI](#comfyui--ai-image-generation) ready out of the box.
+- 🎨 **Optional GPU image generation** — `--comfyui` starts a thin, self-installing ComfyUI container alongside the session; Claude generates images directly via MCP.
+- 🌐 **Corporate proxy support** — `HTTP_PROXY`/`HTTPS_PROXY` and self-signed TLS CA passthrough, for locked-down networks.
+- 📌 **User-level standing rules** — `~/.claude/CLAUDE.md` seeded once from `claude-defaults/` (never overwrites your edits), for behavioral rules that should apply across every project.
+- 📦 **Three ways to install** — clone the repo, a one-line install script, or pull the image directly and skip the clone entirely.
+
+**Docker image:** [`slaweekq/claude-docker:latest`](https://hub.docker.com/r/slaweekq/claude-docker) —
+every build also pushes a `:<version>` tag matching this project's version (e.g. `:1.4.2`),
+if you'd rather pin to a specific release than track `latest`.
 
 ---
 

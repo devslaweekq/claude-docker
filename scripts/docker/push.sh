@@ -24,6 +24,7 @@ if [ -z "$TARGET" ]; then
 fi
 
 CI="${GITHUB_ACTIONS:-false}"
+VERSION="$(node -p "require('./package.json').version")"
 
 if [ "$CI" = "true" ]; then
   if [ -z "${DOCKER_USERNAME:-}" ]; then
@@ -39,27 +40,29 @@ else
 fi
 
 push_claude() {
-  local IMAGE="$DOCKER_USERNAME/claude-docker:latest"
+  local REPO_IMAGE="$DOCKER_USERNAME/claude-docker"
 
   [ "$CI" != "true" ] && DOCKER_USERNAME="$DOCKER_USERNAME" bash "$REPO/scripts/docker/build.sh" --claude
 
-  echo "==> Push: $IMAGE"
-  docker push "$IMAGE"
-  [ "$CI" != "true" ] && docker pull "$IMAGE"
+  echo "==> Push: $REPO_IMAGE:latest, $REPO_IMAGE:$VERSION"
+  docker push "$REPO_IMAGE:latest"
+  docker push "$REPO_IMAGE:$VERSION"
+  [ "$CI" != "true" ] && docker pull "$REPO_IMAGE:latest"
 
-  echo "  Registry: $IMAGE"
+  echo "  Registry: $REPO_IMAGE:latest, $REPO_IMAGE:$VERSION"
 }
 
 push_comfyui() {
-  local IMAGE="$DOCKER_USERNAME/comfyui:latest"
+  local REPO_IMAGE="$DOCKER_USERNAME/comfyui"
 
   [ "$CI" != "true" ] && DOCKER_USERNAME="$DOCKER_USERNAME" bash "$REPO/scripts/docker/build.sh" --comfyui
 
-  echo "==> Push: $IMAGE"
-  docker push "$IMAGE"
-  [ "$CI" != "true" ] && docker pull "$IMAGE"
+  echo "==> Push: $REPO_IMAGE:latest, $REPO_IMAGE:$VERSION"
+  docker push "$REPO_IMAGE:latest"
+  docker push "$REPO_IMAGE:$VERSION"
+  [ "$CI" != "true" ] && docker pull "$REPO_IMAGE:latest"
 
-  echo "  Registry: $IMAGE"
+  echo "  Registry: $REPO_IMAGE:latest, $REPO_IMAGE:$VERSION"
 }
 
 case "$TARGET" in

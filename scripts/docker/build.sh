@@ -18,6 +18,7 @@ if [ -z "$TARGET" ]; then
 fi
 
 CI="${GITHUB_ACTIONS:-false}"
+VERSION="$(node -p "require('./package.json').version")"
 
 if [ "$CI" = "true" ]; then
   if [ -z "${DOCKER_USERNAME:-}" ]; then
@@ -33,16 +34,16 @@ elif [ -z "${DOCKER_USERNAME:-}" ]; then
 fi
 
 build_claude() {
-  local IMAGE="$DOCKER_USERNAME/claude-docker:latest"
-  local CACHE="$DOCKER_USERNAME/claude-docker:buildcache"
+  local REPO_IMAGE="$DOCKER_USERNAME/claude-docker"
+  local CACHE="$REPO_IMAGE:buildcache"
 
   if [ "$CI" != "true" ]; then
     echo "==> Stop running Claude Docker sessions (if any)"
     mapfile -t running < <(docker ps -q --filter label=claude-docker.role=session 2>/dev/null || true)
     [ ${#running[@]} -gt 0 ] && docker stop "${running[@]}"
 
-    echo "==> Remove old local image: $IMAGE"
-    docker rmi -f "$IMAGE" 2>/dev/null || true
+    echo "==> Remove old local images: $REPO_IMAGE:latest, $REPO_IMAGE:$VERSION"
+    docker rmi -f "$REPO_IMAGE:latest" "$REPO_IMAGE:$VERSION" 2>/dev/null || true
   fi
 
   docker buildx build \
@@ -51,15 +52,15 @@ build_claude() {
     --build-arg HTTPS_PROXY= --build-arg https_proxy= \
     --cache-from type=registry,ref="$CACHE" \
     --cache-to   type=registry,ref="$CACHE",mode=max \
-    -t "$IMAGE" --load \
+    -t "$REPO_IMAGE:latest" -t "$REPO_IMAGE:$VERSION" --load \
     .
 
-  echo "OK: $IMAGE  (cache → $CACHE)"
+  echo "OK: $REPO_IMAGE:latest, $REPO_IMAGE:$VERSION  (cache → $CACHE)"
 }
 
 build_comfyui() {
-  local IMAGE="$DOCKER_USERNAME/comfyui:latest"
-  local CACHE="$DOCKER_USERNAME/comfyui:buildcache"
+  local REPO_IMAGE="$DOCKER_USERNAME/comfyui"
+  local CACHE="$REPO_IMAGE:buildcache"
 
   docker buildx build \
     --progress=plain \
@@ -67,10 +68,10 @@ build_comfyui() {
     --build-arg HTTPS_PROXY= --build-arg https_proxy= \
     --cache-from type=registry,ref="$CACHE" \
     --cache-to   type=registry,ref="$CACHE",mode=max \
-    -t "$IMAGE" --load \
+    -t "$REPO_IMAGE:latest" -t "$REPO_IMAGE:$VERSION" --load \
     ./comfyui
 
-  echo "OK: $IMAGE  (cache → $CACHE)"
+  echo "OK: $REPO_IMAGE:latest, $REPO_IMAGE:$VERSION  (cache → $CACHE)"
 }
 
 case "$TARGET" in
