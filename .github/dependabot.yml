@@ -1,18 +1,18 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
+      interval: 'weekly'
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-  - package-ecosystem: "docker"
-    directory: "/"
+      interval: 'weekly'
+  - package-ecosystem: 'docker'
+    directory: '/'
     schedule:
-      interval: "weekly"
-  - package-ecosystem: "docker"
-    directory: "/comfyui"
+      interval: 'weekly'
+  - package-ecosystem: 'docker'
+    directory: '/comfyui'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
