@@ -259,6 +259,8 @@ Headroom listens at `http://localhost:8787`. Point your agent or SDK at the prox
 
 You can combine flags: `./launcher --headroom --comfyui`.
 
+If `HTTP_PROXY` / `HTTPS_PROXY` are set in `.env` (see [Proxy](#proxy-optional)), Headroom's own upstream requests are routed through them too — needed if the host's direct egress IP is blocked by the LLM provider (e.g. `unsupported_country_region_territory`).
+
 ---
 
 ## Authentication

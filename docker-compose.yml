@@ -52,6 +52,12 @@ services:
     network_mode: host
     environment:
       - HEADROOM_HOST=0.0.0.0
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - NO_PROXY=${NO_PROXY:-}
+      - http_proxy=${HTTP_PROXY:-}
+      - https_proxy=${HTTPS_PROXY:-}
+      - no_proxy=${NO_PROXY:-}
     volumes:
       - ${HEADROOM_HOME}/.headroom:/home/nonroot/.headroom
     restart: 'no'
