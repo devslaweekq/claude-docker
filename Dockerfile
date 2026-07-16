@@ -1,4 +1,4 @@
-FROM node:24.18.0-slim
+FROM node:26.5.0-slim
 
 # Base tools + git/PR + DB clients (psql, mysql, redis-cli) + GitHub CLI + Claude Code.
 # User node (uid 1000) already exists in the image.
