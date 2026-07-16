@@ -255,7 +255,7 @@ Run [Headroom](https://github.com/headroomlabs-ai/headroom) locally in Docker as
 ./launcher --headroom
 ```
 
-Headroom listens at `http://localhost:8787`. Point your agent or SDK at the proxy (e.g. `ANTHROPIC_BASE_URL=http://localhost:8787` for Anthropic-compatible clients). State persists in `~/claude-docker/headroom/.headroom/`.
+Headroom listens at `http://localhost:8787`. `--headroom` also points the `claude` session at it (`ANTHROPIC_BASE_URL=http://localhost:8787`), so the session's own traffic actually goes through the proxy — starting the container alone wouldn't route anything through it. State persists in `~/claude-docker/headroom/.headroom/`.
 
 You can combine flags: `./launcher --headroom --comfyui`.
 
@@ -292,18 +292,18 @@ Tokens last about one year.
 
 Claude Code, `git`, `gh` (GitHub CLI), `fzf`, `bun`, DB clients (`psql`, `mysql`, `redis-cli`), and these MCP servers pre-configured:
 
-| MCP server | What it connects to                                       |
-| ---------- | --------------------------------------------------------- |
-| comfyui    | Local ComfyUI server at localhost:8188 (`--comfyui` flag) |
-| claude-mem | Session memory search — `search`, `timeline`, `get_observations`; worker at localhost:37777 |
-| headroom   | Local Headroom proxy at localhost:8787 (`--headroom` flag) |
-| github     | GitHub (requires `GH_TOKEN`)                              |
-| playwright | Browser automation                                        |
-| context7   | Library docs (requires `CONTEXT7_API_KEY`)                |
-| figma      | Figma designs                                             |
-| atlassian  | Jira (requires `JIRA_*` vars)                             |
-| kubernetes | Kubernetes cluster (read-only)                            |
-| sentry     | Sentry error tracking                                     |
+| MCP server | What it connects to                                                                 |
+| ---------- | ----------------------------------------------------------------------------------- |
+| comfyui    | Local ComfyUI server at localhost:8188 (`--comfyui` flag)                           |
+| claude-mem | Session memory search — `search`, `timeline`, `get_observations` at localhost:37777 |
+| headroom   | Local Headroom proxy at localhost:8787 (`--headroom` flag)                          |
+| github     | GitHub (requires `GH_TOKEN`)                                                        |
+| playwright | Browser automation                                                                  |
+| context7   | Library docs (requires `CONTEXT7_API_KEY`)                                          |
+| figma      | Figma designs                                                                       |
+| atlassian  | Jira (requires `JIRA_*` vars)                                                       |
+| kubernetes | Kubernetes cluster (read-only)                                                      |
+| sentry     | Sentry error tracking                                                               |
 
 Plugins pre-installed: [superpowers](https://github.com/anthropics/claude-code-superpowers), [claude-mem](https://github.com/thedotmack/claude-mem).
 
