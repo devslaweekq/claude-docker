@@ -62,6 +62,13 @@ services:
       - http_proxy=${HTTP_PROXY:-}
       - https_proxy=${HTTPS_PROXY:-}
       - no_proxy=${NO_PROXY:-}
+      # Speed tuning (documented only in headroom's CHANGELOG.md, not the stable config docs —
+      # revisit these if a future headroom release changes their meaning or defaults).
+      - HEADROOM_BACKGROUND_COMPRESSION=true # forward uncompressed immediately, compress in background — biggest latency win for a single interactive session
+      - HEADROOM_TEXT_CRUSHER=true # fast deterministic compressor instead of the ModernBERT model
+      - HEADROOM_COMPRESSION_DEADLINE_MS=150 # cap worst-case compression stall per request
+      - HEADROOM_KOMPRESS_MAX_TOKENS=50000 # route oversized turns around the ML model entirely
+      - HEADROOM_COLD_START_FAST_PASS_TIMEOUT_SECONDS=5 # shrink the first-request cold-start budget (default 10s)
     volumes:
       - ${HEADROOM_HOME}/.headroom:/home/nonroot/.headroom
     restart: 'no'
