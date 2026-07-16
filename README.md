@@ -360,6 +360,14 @@ Alternatively, double-click [`launcher.bat`](launcher.bat) from the cloned repo 
 
 ---
 
+## Contributing
+
+Feel free to [open an issue](https://github.com/devslaweekq/claude-docker/issues/new) or a
+[pull request](https://github.com/devslaweekq/claude-docker/pulls), following the
+[Contributing Guidelines](CONTRIBUTING.md).
+
+---
+
 <details>
 <summary>For maintainers</summary>
 

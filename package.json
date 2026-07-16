@@ -14,6 +14,7 @@
     "build:docker": "docker compose -f ./docker-compose.dev.yml build --build-arg HTTP_PROXY= --build-arg HTTPS_PROXY= --build-arg http_proxy= --build-arg https_proxy=",
     "bump": "bash scripts/utils/bump-version.sh",
     "format": "prettier -w .",
+    "format:check": "prettier -c .",
     "launcher": "./launcher",
     "push": "bash scripts/docker/push.sh --all",
     "push:claude": "bash scripts/docker/push.sh --claude",
