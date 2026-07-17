@@ -3,6 +3,9 @@
 certs/*.crt
 certs/*.key
 
+# Web console frontend vendor assets — fetched at Docker build time, not committed
+claude-docker/web/vendor/
+
 # Editor junk
 *.swp
 *.swo

@@ -15,7 +15,7 @@ services:
       - .env
     volumes:
       - ${CLAUDE_HOME}:/home/node
-      - ./claude-docker/certs:/tmp/certs-input:ro
+      - ./certs:/tmp/certs-input:ro
       # /workspace/<name> mounts are passed dynamically by the launcher via -v flags (PROJECT_DIRS)
 
   # ComfyUI — host network, listens on localhost:8188 (see PORTS.md)

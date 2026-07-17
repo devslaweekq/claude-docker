@@ -24,8 +24,27 @@ if ! git config --global --get-all url.https://github.com/.insteadof 2>/dev/null
   git config --global url."https://github.com/".insteadOf "git@github.com:"
 fi
 
-if [ ! -f "$HOME/.claude/settings.json" ] && [ -f "$DEF/settings.json" ]; then
-  cp "$DEF/settings.json" "$HOME/.claude/settings.json"
+if [ -f "$DEF/settings.json" ]; then
+  if [ ! -f "$HOME/.claude/settings.json" ]; then
+    cp "$DEF/settings.json" "$HOME/.claude/settings.json"
+  else
+    # Existing users never get any key they already have touched or overwritten — but
+    # any key that's new in the shipped defaults (a whole top-level setting, or a key
+    # nested inside one that already partially exists, e.g. a new hooks.* event) gets
+    # filled in automatically. `defaults * user` is jq's recursive merge with the right
+    # side winning on any conflict: wherever the user's file already defines a key (at
+    # any depth), that value is kept untouched; only genuinely missing keys are pulled
+    # in from defaults. This is the general mechanism for every future settings.json
+    # addition, not something hardcoded per key.
+    _settings_tmp="$(mktemp)"
+    if jq -s '.[0] * .[1]' "$DEF/settings.json" "$HOME/.claude/settings.json" > "$_settings_tmp" \
+        2>/dev/null && [ -s "$_settings_tmp" ] && jq -e . "$_settings_tmp" >/dev/null 2>&1; then
+      mv "$_settings_tmp" "$HOME/.claude/settings.json"
+    else
+      rm -f "$_settings_tmp"
+    fi
+    unset _settings_tmp
+  fi
 fi
 
 # user-level CLAUDE.md (standing rules across all projects) — seed once, never overwrite user edits

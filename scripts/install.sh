@@ -121,7 +121,7 @@ download claude-docker/launcher "$LAUNCHER" 755
 download docker-compose.yml "$INSTALL_DIR/docker-compose.yml" 644
 download .env.example "$INSTALL_DIR/.env.example" 644
 
-_curl "$RAW_BASE/claude-docker/certs/README.md" -o "$INSTALL_DIR/certs/README.md" 2>/dev/null \
+_curl "$RAW_BASE/certs/README.md" -o "$INSTALL_DIR/certs/README.md" 2>/dev/null \
   && chmod 644 "$INSTALL_DIR/certs/README.md" || true
 
 if [ ! -f "$INSTALL_DIR/comfyui/user/default/workflows/default.json" ]; then
