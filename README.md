@@ -29,6 +29,7 @@ cp .env.example .env && chmod 600 .env
 
 Full install instructions (clone, one-line install script, or Docker image only): [`INSTALL.md`](INSTALL.md). Detailed features, configuration, and troubleshooting: [`claude-docker/README.md`](claude-docker/README.md).
 
+
 ## More docs
 
 - [`INSTALL.md`](INSTALL.md) — the three install methods
