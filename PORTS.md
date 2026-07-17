@@ -4,16 +4,22 @@ All services in this project use **`network_mode: host`**. Containers bind ports
 
 ## Optional services (launcher flags)
 
-| Service  | Port | URL                   | Launcher flag | Compose profile | Health / ready check |
-| -------- | ---- | --------------------- | ------------- | --------------- | -------------------- |
-| ComfyUI  | 8188 | http://localhost:8188 | `--comfyui`   | `comfyui`       | `GET /system_stats`  |
-| Headroom | 8787 | http://localhost:8787 | `--headroom`  | `headroom`      | `GET /readyz`        |
+| Service   | Port | URL                   | Launcher flag | Compose profile | Health / ready check |
+| --------- | ---- | --------------------- | ------------- | --------------- | -------------------- |
+| ComfyUI   | 8188 | http://localhost:8188 | `--comfyui`   | `comfyui`       | `GET /system_stats`  |
+| Headroom  | 8787 | http://localhost:8787 | `--headroom`  | `headroom`      | `GET /readyz`        |
+| Dashboard | 7900 | http://localhost:7900 | `--dashboard` | `dashboard`     | `GET /` (Basic auth) |
+
+`dashboard-watcher` (the stats collector paired with `dashboard`, same compose profile) has no
+port at all — deliberately: it holds the read-only `docker.sock` mount, so it is never
+network-reachable by design, keeping that socket out of reach of anything a browser could touch.
 
 Start examples:
 
 ```bash
 ./claude-docker/launcher --comfyui
 ./claude-docker/launcher --headroom
+./claude-docker/launcher --dashboard
 ./claude-docker/launcher --comfyui --headroom
 ```
 

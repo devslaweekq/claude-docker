@@ -1,6 +1,6 @@
 {
   "name": "claude-docker",
-  "version": "1.4.10",
+  "version": "1.5.3",
   "private": true,
   "description": "Isolated Claude Code in Docker",
   "license": "MIT",
@@ -10,6 +10,7 @@
     "build": "bash scripts/docker/build.sh --all",
     "build:claude": "bash scripts/docker/build.sh --claude",
     "build:comfyui": "bash scripts/docker/build.sh --comfyui",
+    "build:dashboard": "bash scripts/docker/build.sh --dashboard",
     "build:deb": "bash scripts/deb/build-deb.sh",
     "build:docker": "docker compose -f ./docker-compose.dev.yml build --build-arg HTTP_PROXY= --build-arg HTTPS_PROXY= --build-arg http_proxy= --build-arg https_proxy=",
     "bump": "bash scripts/utils/bump-version.sh",
@@ -18,7 +19,8 @@
     "launcher": "./claude-docker/launcher",
     "push": "bash scripts/docker/push.sh --all",
     "push:claude": "bash scripts/docker/push.sh --claude",
-    "push:comfyui": "bash scripts/docker/push.sh --comfyui"
+    "push:comfyui": "bash scripts/docker/push.sh --comfyui",
+    "push:dashboard": "bash scripts/docker/push.sh --dashboard"
   },
   "devDependencies": {
     "prettier": "^3.9.5",

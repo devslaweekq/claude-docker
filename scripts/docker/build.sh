@@ -4,7 +4,8 @@
 # Usage:
 #   bash scripts/docker/build.sh --claude    # build slaweekq/claude-docker:latest (local)
 #   bash scripts/docker/build.sh --comfyui   # build slaweekq/comfyui:latest (local)
-#   bash scripts/docker/build.sh --all       # build both
+#   bash scripts/docker/build.sh --dashboard # build slaweekq/claude-docker-dashboard:latest (local)
+#   bash scripts/docker/build.sh --all       # build all three
 #
 # CI (GitHub Actions): set DOCKER_USERNAME env var; login is done by the workflow.
 
@@ -13,7 +14,7 @@ cd "$(dirname "$0")/../.."
 
 TARGET="${1:-}"
 if [ -z "$TARGET" ]; then
-  echo "Usage: build.sh --claude | --comfyui | --all" >&2
+  echo "Usage: build.sh --claude | --comfyui | --dashboard | --all" >&2
   exit 1
 fi
 
@@ -74,9 +75,26 @@ build_comfyui() {
   echo "OK: $REPO_IMAGE:latest, $REPO_IMAGE:$VERSION  (cache → $CACHE)"
 }
 
+build_dashboard() {
+  local REPO_IMAGE="$DOCKER_USERNAME/claude-docker-dashboard"
+  local CACHE="$REPO_IMAGE:buildcache"
+
+  docker buildx build \
+    --progress=plain \
+    --build-arg HTTP_PROXY= --build-arg http_proxy= \
+    --build-arg HTTPS_PROXY= --build-arg https_proxy= \
+    --cache-from type=registry,ref="$CACHE" \
+    --cache-to   type=registry,ref="$CACHE",mode=max \
+    -t "$REPO_IMAGE:latest" -t "$REPO_IMAGE:$VERSION" --load \
+    ./dashboard
+
+  echo "OK: $REPO_IMAGE:latest, $REPO_IMAGE:$VERSION  (cache → $CACHE)"
+}
+
 case "$TARGET" in
-  --claude)  build_claude ;;
-  --comfyui) build_comfyui ;;
-  --all)     build_claude; build_comfyui ;;
-  *) echo "Unknown target: $TARGET. Use --claude, --comfyui, or --all." >&2; exit 1 ;;
+  --claude)    build_claude ;;
+  --comfyui)   build_comfyui ;;
+  --dashboard) build_dashboard ;;
+  --all)       build_claude; build_comfyui; build_dashboard ;;
+  *) echo "Unknown target: $TARGET. Use --claude, --comfyui, --dashboard, or --all." >&2; exit 1 ;;
 esac

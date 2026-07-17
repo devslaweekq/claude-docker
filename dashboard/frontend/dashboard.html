@@ -1,0 +1,1623 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>session monitor</title>
+    <meta name="description" content="Read-only monitoring dashboard for local sessions and host resource usage." />
+    <style>
+      /* ============================================================
+         TOKENS
+         Carried over from the project's existing terminal-native visual
+         language: backgrounds sit on a blue-charcoal "ink" rather than
+         true black; accent hues are assigned by function, not
+         decoration, so status can be read from shape AND color AND
+         text label (never color alone).
+         ============================================================ */
+      :root {
+        --ink: #14151b;
+        --ink-raised: #191b23;
+        --surface: #1c1e27;
+        --surface-hi: #232633;
+        --line: #2b2e3b;
+        --line-bright: #3a3e4f;
+        --paper: #eae7de;
+        --paper-dim: #9a9dab;
+        --paper-faint: #5c5f6f;
+
+        --amber: #ffb454;
+        --amber-dim: #7a5a2e;
+        --violet: #c792ea;
+        --violet-dim: #4c3c5c;
+        --teal: #5fe1c9;
+        --teal-dim: #2c5850;
+        --rose: #e8646b;
+        --rose-dim: #5c2c30;
+        --slate: #8b93a8;
+
+        --font-sans: ui-sans-serif, "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+        --font-mono: ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", monospace;
+
+        --radius: 3px;
+        --shadow-panel: 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme="dark"]) {
+          --ink: #eeece4;
+          --ink-raised: #e6e3d9;
+          --surface: #f7f5ee;
+          --surface-hi: #ffffff;
+          --line: #d8d4c6;
+          --line-bright: #c3bea9;
+          --paper: #1c1c1a;
+          --paper-dim: #57564e;
+          --paper-faint: #8a8879;
+        }
+      }
+      :root[data-theme="light"] {
+        --ink: #eeece4;
+        --ink-raised: #e6e3d9;
+        --surface: #f7f5ee;
+        --surface-hi: #ffffff;
+        --line: #d8d4c6;
+        --line-bright: #c3bea9;
+        --paper: #1c1c1a;
+        --paper-dim: #57564e;
+        --paper-faint: #8a8879;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--ink);
+        color: var(--paper);
+        font-family: var(--font-sans);
+        line-height: 1.45;
+        min-height: 100vh;
+      }
+      ::selection {
+        background: var(--amber);
+        color: #14151b;
+      }
+      :focus-visible {
+        outline: 2px solid var(--teal);
+        outline-offset: 2px;
+      }
+
+      /* ---- structural bracket motif -------------------------------
+         CLI-flag grammar: interactive/status labels are wrapped in
+         brackets, rendered via pseudo-elements so markup stays plain
+         text. The one recurring signature device used throughout this
+         project's pages. */
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4em;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+        color: var(--paper);
+        white-space: nowrap;
+      }
+      .tag::before {
+        content: "[";
+        color: var(--paper-faint);
+      }
+      .tag::after {
+        content: "]";
+        color: var(--paper-faint);
+      }
+
+      /* ============================================================
+         LAYOUT SHELL
+         ============================================================ */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        padding: 0.9rem 1.5rem;
+        background: color-mix(in srgb, var(--ink) 88%, transparent);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--line);
+      }
+      .brand {
+        display: flex;
+        align-items: baseline;
+        gap: 0.55rem;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 1.05rem;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+      }
+      .brand .caret {
+        color: var(--amber);
+      }
+      .brand .word {
+        text-transform: lowercase;
+        color: var(--paper);
+      }
+      .brand .word small {
+        display: block;
+        font-size: 0.6rem;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--paper-faint);
+        margin-top: 1px;
+      }
+
+      .refresh-indicator {
+        color: var(--state-color, var(--slate));
+        flex: none;
+      }
+      .refresh-indicator[data-state="connecting"] {
+        --state-color: var(--slate);
+      }
+      .refresh-indicator[data-state="live"] {
+        --state-color: var(--teal);
+      }
+      .refresh-indicator[data-state="offline"] {
+        --state-color: var(--rose);
+      }
+      .refresh-glyph {
+        display: inline-block;
+      }
+      .refresh-indicator[data-state="connecting"] .refresh-glyph {
+        animation: spin-glyph 1s steps(4, end) infinite;
+      }
+      .refresh-indicator[data-state="live"] .refresh-glyph {
+        animation: pulse-glyph 2s ease-in-out infinite;
+      }
+      @keyframes spin-glyph {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes pulse-glyph {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.35;
+        }
+      }
+      .refresh-age {
+        margin-left: 0.5rem;
+        color: var(--paper-faint);
+        font-weight: 500;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .refresh-glyph,
+        .status-glyph {
+          animation: none !important;
+        }
+      }
+
+      main {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      /* ============================================================
+         LED-STYLE SEGMENTED BAR METERS
+         A row of discrete lit segments rather than a smooth gradient,
+         colored by load threshold (teal < 60%, amber 60-85%, rose >
+         85%) rather than by which metric it represents -- so the
+         color always answers "should I worry about this," not "what
+         is this."
+         ============================================================ */
+      .meter {
+        position: relative;
+        flex: 1 1 auto;
+        height: 10px;
+        background: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 2px;
+        overflow: hidden;
+        min-width: 60px;
+      }
+      .meter.meter-sm {
+        height: 6px;
+      }
+      .meter-fill {
+        height: 100%;
+        width: 0%;
+        background-color: var(--meter-color, var(--teal));
+        background-image: repeating-linear-gradient(
+          to right,
+          rgba(0, 0, 0, 0.55) 0px,
+          rgba(0, 0, 0, 0.55) 2px,
+          transparent 2px,
+          transparent 8px
+        );
+        transition: width 0.35s ease;
+      }
+
+      /* ============================================================
+         METRICS PANEL — dense, glanceable, monospace-flavored
+         ============================================================ */
+      .metrics {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        padding: 0.9rem 1.1rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 0.65rem 1.75rem;
+        font-family: var(--font-mono);
+      }
+      .metric {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        min-width: 0;
+      }
+      .metric.is-hidden {
+        display: none;
+      }
+      .metric-row {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+      }
+      .metric-label {
+        width: 6.5rem;
+        flex: none;
+        font-size: 0.68rem;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--paper-faint);
+      }
+      .metric-value {
+        flex: none;
+        font-size: 0.78rem;
+        font-variant-numeric: tabular-nums;
+        color: var(--paper-dim);
+        min-width: 3.2ch;
+        text-align: right;
+      }
+      .metric-detail {
+        margin-left: calc(6.5rem + 0.65rem);
+        font-size: 0.66rem;
+        color: var(--paper-faint);
+      }
+      .metrics-note {
+        font-size: 0.66rem;
+        color: var(--paper-faint);
+        margin-top: -0.4rem;
+      }
+
+      /* ============================================================
+         COMPANION CARDS — comfyui / headroom / dashboard / stats
+         collector. Each service gets its own bordered card with cpu
+         AND mem broken out as separate labeled rows (a single bare
+         percentage doesn't say which metric it is, or how much
+         headroom is left) — deliberately separate from the host
+         .metrics grid above, not squeezed into the same row shape.
+         ============================================================ */
+      .companions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 0.65rem;
+      }
+      .companion-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        padding: 0.75rem 0.9rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        font-family: var(--font-mono);
+      }
+      .companion-card.is-hidden {
+        display: none;
+      }
+      .companion-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .companion-name {
+        font-size: 0.72rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--paper);
+        font-weight: 600;
+      }
+      .companion-row {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+      }
+      .companion-sublabel {
+        width: 2.4rem;
+        flex: none;
+        font-size: 0.64rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--paper-faint);
+      }
+      .companion-value {
+        flex: none;
+        font-size: 0.7rem;
+        font-variant-numeric: tabular-nums;
+        color: var(--paper-dim);
+        min-width: 6ch;
+        text-align: right;
+      }
+
+      /* ============================================================
+         TOOLBAR — search only (no session creation from this page)
+         ============================================================ */
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+      .search-wrap {
+        position: relative;
+        flex: 1 1 260px;
+        min-width: 200px;
+      }
+      .search-input {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        color: var(--paper);
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        padding: 0.6rem 0.8rem 0.6rem 2rem;
+      }
+      .search-input:focus-visible {
+        border-color: var(--teal);
+      }
+      .search-wrap::before {
+        content: "⌕";
+        position: absolute;
+        left: 0.7rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--paper-faint);
+        font-size: 0.95rem;
+        pointer-events: none;
+      }
+
+      .search-panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        overflow: hidden;
+        display: none;
+      }
+      .search-panel.is-open {
+        display: block;
+      }
+      .search-panel-heading {
+        padding: 0.5rem 0.9rem;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--paper-faint);
+        border-bottom: 1px solid var(--line);
+      }
+      .search-result {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: none;
+        border-bottom: 1px solid var(--line);
+        color: var(--paper);
+        padding: 0.55rem 0.9rem;
+        cursor: pointer;
+        font-family: var(--font-sans);
+        font-size: 0.82rem;
+      }
+      .search-result:last-child {
+        border-bottom: none;
+      }
+      .search-result:hover,
+      .search-result:focus-visible {
+        background: var(--surface-hi);
+      }
+      .search-result.is-orphan {
+        cursor: default;
+        opacity: 0.7;
+      }
+      .search-result .snippet {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--paper-faint);
+        margin-top: 2px;
+      }
+      .search-result .line-no {
+        color: var(--paper-faint);
+        font-weight: 400;
+      }
+      .search-result mark {
+        background: var(--amber-dim);
+        color: var(--amber);
+        border-radius: 2px;
+        padding: 0 1px;
+      }
+      .search-empty {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.8rem;
+        color: var(--paper-faint);
+        font-family: var(--font-mono);
+      }
+
+      button {
+        font-family: var(--font-sans);
+        cursor: pointer;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: var(--surface);
+        border: 1px solid var(--line-bright);
+        color: var(--paper);
+        border-radius: var(--radius);
+        padding: 0.45rem 0.7rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          transform 0.1s ease;
+      }
+      .btn:hover {
+        border-color: var(--teal);
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      /* ============================================================
+         SESSION GRID + PANE CARDS
+         Each card reads as a miniature terminal pane: hairline frame,
+         four corner glyphs, a titlebar segmented like a status line.
+         ============================================================ */
+      .grid-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+      .grid-heading h1 {
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--paper-dim);
+        font-weight: 700;
+        margin: 0;
+      }
+      .grid-count {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--paper-faint);
+      }
+
+      .session-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+      }
+
+      .pane {
+        position: relative;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition:
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+      .pane::before,
+      .pane::after,
+      .pane .corner-bl,
+      .pane .corner-br {
+        content: "";
+        position: absolute;
+        width: 9px;
+        height: 9px;
+        border: 1px solid var(--line-bright);
+        pointer-events: none;
+      }
+      .pane::before {
+        top: -1px;
+        left: -1px;
+        border-right: none;
+        border-bottom: none;
+      }
+      .pane::after {
+        top: -1px;
+        right: -1px;
+        border-left: none;
+        border-bottom: none;
+      }
+      .pane .corner-bl {
+        bottom: -1px;
+        left: -1px;
+        border-right: none;
+        border-top: none;
+      }
+      .pane .corner-br {
+        bottom: -1px;
+        right: -1px;
+        border-left: none;
+        border-top: none;
+      }
+      .pane:hover {
+        border-color: var(--line-bright);
+      }
+      .pane:hover::before,
+      .pane:hover::after,
+      .pane:hover .corner-bl,
+      .pane:hover .corner-br {
+        border-color: var(--teal);
+      }
+      .pane.is-match {
+        box-shadow: 0 0 0 1px var(--teal);
+        border-color: var(--teal);
+      }
+
+      .pane-titlebar {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.65rem 0.8rem;
+        border-bottom: 1px solid var(--line);
+        background: var(--ink-raised);
+      }
+      .pane-name {
+        font-weight: 700;
+        font-size: 0.88rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1 1 auto;
+        min-width: 0;
+        background: none;
+        border: 1px solid transparent;
+        border-radius: 2px;
+        color: var(--paper);
+        padding: 0.1rem 0.3rem;
+        margin: -0.1rem -0.3rem;
+        text-align: left;
+        font-family: var(--font-sans);
+      }
+      .pane-name:hover {
+        border-color: var(--line-bright);
+      }
+      .pane-rename-input {
+        flex: 1 1 auto;
+        min-width: 0;
+        background: var(--ink);
+        border: 1px solid var(--teal);
+        border-radius: 2px;
+        color: var(--paper);
+        font-family: var(--font-sans);
+        font-weight: 700;
+        font-size: 0.88rem;
+        padding: 0.1rem 0.3rem;
+      }
+
+      .status-pill {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35em;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 0.18rem 0.5rem;
+        border-radius: 999px;
+        border: 1px solid var(--pill-color, var(--slate));
+        color: var(--pill-color, var(--slate));
+      }
+      .status-glyph {
+        font-size: 0.85em;
+        line-height: 1;
+      }
+      .status-pill[data-status="running"] .status-glyph {
+        animation: pulse-glyph 1.6s ease-in-out infinite;
+      }
+
+      .pane-path {
+        display: block;
+        padding: 0.5rem 0.8rem 0;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--paper-dim);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .pane-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.4rem 0.9rem;
+        padding: 0.4rem 0.8rem 0;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--paper-dim);
+      }
+      .git-branch {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3em;
+      }
+      .dirty-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--amber);
+      }
+
+      .pane-usage {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        padding: 0.55rem 0.8rem 0;
+      }
+      .usage-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .usage-label {
+        width: 2.4rem;
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 0.64rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--paper-faint);
+      }
+      .usage-value {
+        flex: none;
+        width: 4.5ch;
+        text-align: right;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: var(--paper-dim);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .pane-footer {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 0.8rem 0.75rem;
+        margin-top: auto;
+      }
+      .pane-time {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--paper-faint);
+      }
+      .pane-preview-btn {
+        margin-left: auto;
+        background: none;
+        border: 1px solid var(--line-bright);
+        color: var(--paper-dim);
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.03em;
+        padding: 0.3rem 0.55rem;
+        border-radius: var(--radius);
+      }
+      .pane-preview-btn:hover {
+        border-color: var(--teal);
+        color: var(--teal);
+      }
+      .pane-delete {
+        background: none;
+        border: 1px solid var(--line-bright);
+        color: var(--paper-dim);
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.03em;
+        padding: 0.3rem 0.55rem;
+        border-radius: var(--radius);
+      }
+      .pane-delete:hover {
+        border-color: var(--rose);
+        color: var(--rose);
+      }
+      .pane-delete[data-armed="true"] {
+        border-color: var(--rose);
+        color: var(--rose);
+        background: var(--rose-dim);
+      }
+
+      .empty-state {
+        border: 1px dashed var(--line-bright);
+        border-radius: var(--radius);
+        padding: 3rem 1.5rem;
+        text-align: center;
+        color: var(--paper-dim);
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        grid-column: 1 / -1;
+      }
+      .empty-state strong {
+        display: block;
+        color: var(--paper);
+        font-family: var(--font-sans);
+        font-size: 1.1rem;
+        margin-bottom: 0.4rem;
+      }
+
+      /* ============================================================
+         PREVIEW MODAL
+         ============================================================ */
+      dialog {
+        border: 1px solid var(--line-bright);
+        border-radius: var(--radius);
+        background: var(--surface-hi);
+        color: var(--paper);
+        padding: 0;
+        width: min(640px, 92vw);
+        max-height: 80vh;
+        box-shadow: var(--shadow-panel);
+      }
+      dialog::backdrop {
+        background: rgba(6, 7, 10, 0.65);
+        backdrop-filter: blur(2px);
+      }
+      .dialog-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.2rem;
+        border-bottom: 1px solid var(--line);
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+      .dialog-header .close-btn {
+        background: none;
+        border: 1px solid var(--line-bright);
+        color: var(--paper-dim);
+        border-radius: var(--radius);
+        padding: 0.25rem 0.55rem;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+      }
+      .dialog-header .close-btn:hover {
+        border-color: var(--teal);
+        color: var(--teal);
+      }
+      .dialog-body {
+        padding: 1rem 1.2rem;
+        overflow-y: auto;
+        max-height: calc(80vh - 60px);
+      }
+      #previewBody {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--paper);
+      }
+      #previewBody .empty {
+        color: var(--paper-faint);
+        font-style: italic;
+      }
+
+      footer.page-footer {
+        text-align: center;
+        padding: 1.5rem;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: var(--paper-faint);
+      }
+
+      @media (max-width: 560px) {
+        .topbar {
+          flex-wrap: wrap;
+          gap: 0.6rem;
+        }
+        .metrics {
+          grid-template-columns: 1fr;
+        }
+        .metric-detail {
+          margin-left: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="caret" aria-hidden="true">&gt;_</span>
+        <span class="word">session monitor<small>read-only dashboard</small></span>
+      </div>
+      <span class="tag refresh-indicator" id="refreshIndicator" data-state="connecting">
+        <span class="refresh-glyph" id="refreshGlyph" aria-hidden="true">◐</span
+        ><span id="refreshLabel">connecting</span><span class="refresh-age" id="refreshAge"></span>
+      </span>
+    </header>
+
+    <main>
+      <section class="metrics" id="metricsPanel" aria-label="Host resource usage">
+        <div class="metric" data-metric="cpu">
+          <div class="metric-row">
+            <span class="metric-label">host cpu</span>
+            <div class="meter"><div class="meter-fill" id="meterCpu"></div></div>
+            <span class="metric-value" id="valueCpu">--%</span>
+          </div>
+        </div>
+        <div class="metric" data-metric="ram">
+          <div class="metric-row">
+            <span class="metric-label">host ram</span>
+            <div class="meter"><div class="meter-fill" id="meterRam"></div></div>
+            <span class="metric-value" id="valueRam">--%</span>
+          </div>
+          <span class="metric-detail" id="detailRam"></span>
+        </div>
+        <div class="metric" data-metric="disk">
+          <div class="metric-row">
+            <span class="metric-label">host disk</span>
+            <div class="meter"><div class="meter-fill" id="meterDisk"></div></div>
+            <span class="metric-value" id="valueDisk">--%</span>
+          </div>
+        </div>
+      </section>
+
+      <section aria-label="Companion service resource usage">
+        <p class="metrics-note" id="companionsNote"></p>
+        <div class="companions" id="companionsGrid">
+          <div class="companion-card is-hidden" id="companionCard-comfyui">
+            <div class="companion-head">
+              <span class="companion-name">gpu service</span>
+              <span class="status-pill" data-status="running" style="--pill-color: var(--teal)">
+                <span class="status-glyph" aria-hidden="true">●</span>running
+              </span>
+            </div>
+            <div class="companion-row">
+              <span class="companion-sublabel">cpu</span>
+              <div class="meter meter-sm"><div class="meter-fill" id="companionCpuMeter-comfyui"></div></div>
+              <span class="companion-value" id="companionCpuValue-comfyui">--%</span>
+            </div>
+            <div class="companion-row">
+              <span class="companion-sublabel">mem</span>
+              <div class="meter meter-sm"><div class="meter-fill" id="companionMemMeter-comfyui"></div></div>
+              <span class="companion-value" id="companionMemValue-comfyui">--</span>
+            </div>
+          </div>
+          <div class="companion-card is-hidden" id="companionCard-headroom">
+            <div class="companion-head">
+              <span class="companion-name">compression proxy</span>
+              <span class="status-pill" data-status="running" style="--pill-color: var(--teal)">
+                <span class="status-glyph" aria-hidden="true">●</span>running
+              </span>
+            </div>
+            <div class="companion-row">
+              <span class="companion-sublabel">cpu</span>
+              <div class="meter meter-sm"><div class="meter-fill" id="companionCpuMeter-headroom"></div></div>
+              <span class="companion-value" id="companionCpuValue-headroom">--%</span>
+            </div>
+            <div class="companion-row">
+              <span class="companion-sublabel">mem</span>
+              <div class="meter meter-sm"><div class="meter-fill" id="companionMemMeter-headroom"></div></div>
+              <span class="companion-value" id="companionMemValue-headroom">--</span>
+            </div>
+          </div>
+          <div class="companion-card is-hidden" id="companionCard-dashboard">
+            <div class="companion-head">
+              <span class="companion-name">dashboard</span>
+              <span class="status-pill" data-status="running" style="--pill-color: var(--teal)">
+                <span class="status-glyph" aria-hidden="true">●</span>running
+              </span>
+            </div>
+            <div class="companion-row">
+              <span class="companion-sublabel">cpu</span>
+              <div class="meter meter-sm"><div class="meter-fill" id="companionCpuMeter-dashboard"></div></div>
+              <span class="companion-value" id="companionCpuValue-dashboard">--%</span>
+            </div>
+            <div class="companion-row">
+              <span class="companion-sublabel">mem</span>
+              <div class="meter meter-sm"><div class="meter-fill" id="companionMemMeter-dashboard"></div></div>
+              <span class="companion-value" id="companionMemValue-dashboard">--</span>
+            </div>
+          </div>
+          <div class="companion-card is-hidden" id="companionCard-dashboardWatcher">
+            <div class="companion-head">
+              <span class="companion-name">stats collector</span>
+              <span class="status-pill" data-status="running" style="--pill-color: var(--teal)">
+                <span class="status-glyph" aria-hidden="true">●</span>running
+              </span>
+            </div>
+            <div class="companion-row">
+              <span class="companion-sublabel">cpu</span>
+              <div class="meter meter-sm"><div class="meter-fill" id="companionCpuMeter-dashboardWatcher"></div></div>
+              <span class="companion-value" id="companionCpuValue-dashboardWatcher">--%</span>
+            </div>
+            <div class="companion-row">
+              <span class="companion-sublabel">mem</span>
+              <div class="meter meter-sm"><div class="meter-fill" id="companionMemMeter-dashboardWatcher"></div></div>
+              <span class="companion-value" id="companionMemValue-dashboardWatcher">--</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <div class="search-wrap">
+          <input
+            type="search"
+            class="search-input"
+            id="searchInput"
+            placeholder="search session history…"
+            aria-label="Search session history"
+            autocomplete="off"
+          />
+        </div>
+      </section>
+
+      <section class="search-panel" id="searchPanel" aria-live="polite">
+        <div class="search-panel-heading" id="searchPanelHeading">results</div>
+        <div id="searchResults"></div>
+      </section>
+
+      <section aria-label="Sessions">
+        <div class="grid-heading">
+          <h1>sessions</h1>
+          <span class="grid-count" id="gridCount"></span>
+        </div>
+        <div class="session-grid" id="sessionGrid"></div>
+      </section>
+    </main>
+
+    <footer class="page-footer">local session monitor &middot; read-only &middot; connects same-origin only</footer>
+
+    <dialog id="previewDialog">
+      <div class="dialog-header">
+        <span id="previewTitle">preview</span>
+        <button type="button" class="close-btn" id="closePreview">close</button>
+      </div>
+      <div class="dialog-body">
+        <pre id="previewBody"></pre>
+      </div>
+    </dialog>
+
+    <script>
+      "use strict";
+
+      /* ============================================================
+         DATA LAYER
+         The backend gateway is a separate service; this page assumes
+         a small same-origin JSON API and degrades to local sample
+         data when that API is unreachable (e.g. static preview).
+         ============================================================ */
+      const API = {
+        sessions: "/api/sessions",
+        metrics: "/api/metrics",
+        search: "/api/search",
+        preview: (slug, session) =>
+          `/api/preview?slug=${encodeURIComponent(slug)}&session=${encodeURIComponent(session)}`,
+        deleteSession: (slug, session) =>
+          `/api/delete?slug=${encodeURIComponent(slug)}&session=${encodeURIComponent(session)}`,
+        renameSession: (slug, session, name) =>
+          `/api/rename?slug=${encodeURIComponent(slug)}&session=${encodeURIComponent(session)}&name=${encodeURIComponent(name)}`,
+      };
+
+      // A project directory holds many sessions (one .jsonl each); a card/result
+      // is only uniquely identified by the pair, never by slug alone.
+      const cardKey = (slug, sessionId) => `${slug}::${sessionId}`;
+
+      // Sample data used only when /api/sessions is unreachable (e.g. this
+      // file opened standalone for a design preview, gateway not running).
+      // Field names mirror the real API response shape exactly.
+      const SAMPLE_SESSIONS = [
+        {
+          slug: "-workspace-orders-api",
+          sessionId: "sample-orders-1",
+          name: "orders-api",
+          cwd: "/workspace/orders-api",
+          status: "running",
+          lastActivity: Math.floor(Date.now() / 1000) - 2 * 60,
+          gitBranch: "main",
+          gitDirty: true,
+          tokensUsed: 128430,
+          cpuPercent: 8.1,
+          memUsedMb: 512,
+        },
+        {
+          slug: "-workspace-site-content",
+          sessionId: "sample-site-1",
+          name: "site-content",
+          cwd: "/workspace/site/content",
+          status: "running",
+          lastActivity: Math.floor(Date.now() / 1000) - 12,
+          gitBranch: "docs/pass-3",
+          gitDirty: false,
+          tokensUsed: 4210,
+          cpuPercent: 2.4,
+          memUsedMb: 210,
+        },
+        {
+          slug: "-home-dev-scratch",
+          sessionId: "sample-scratch-1",
+          name: "scratch",
+          cwd: "/home/dev/scratch",
+          status: "stopped",
+          lastActivity: Math.floor(Date.now() / 1000) - 60 * 60,
+          gitBranch: null,
+          gitDirty: false,
+          tokensUsed: null,
+          cpuPercent: null,
+          memUsedMb: null,
+        },
+        {
+          slug: "-workspace-legacy-db",
+          sessionId: "sample-legacy-1",
+          name: "legacy-db-migration",
+          cwd: "/workspace/legacy-db",
+          status: "stopped",
+          lastActivity: Math.floor(Date.now() / 1000) - 3 * 24 * 60 * 60,
+          gitBranch: "main",
+          gitDirty: true,
+          tokensUsed: 88210,
+          cpuPercent: null,
+          memUsedMb: null,
+        },
+      ];
+
+      const SAMPLE_PREVIEWS = {
+        [cardKey("-workspace-orders-api", "sample-orders-1")]: [
+          "running test suite...",
+          "PASS  src/orders/handler.test.js",
+          "214 passed, 2 pending",
+          "waiting for next instruction",
+        ],
+        [cardKey("-workspace-site-content", "sample-site-1")]: [
+          "writing changelog entry...",
+          "proposed diff applied to CHANGELOG.md",
+        ],
+        [cardKey("-home-dev-scratch", "sample-scratch-1")]: ["ls", "notes.txt  sandbox.py"],
+        [cardKey("-workspace-legacy-db", "sample-legacy-1")]: [
+          "npm run migrate",
+          "ERROR connection refused",
+          "process exited (1)",
+        ],
+      };
+
+      const SAMPLE_METRICS = {
+        timestamp: Math.floor(Date.now() / 1000),
+        host: { cpuPercent: 34, cpuCores: 8, memUsedMb: 4700, memTotalMb: 16384, diskUsedPercent: 61 },
+        containers: {},
+        companions: {
+          comfyui: { running: true, cpuPercent: 62, memUsedMb: 6100, memLimitMb: 16384 },
+          headroom: { running: true, cpuPercent: 9, memUsedMb: 240, memLimitMb: 16384 },
+          dashboard: { running: true, cpuPercent: 124, memUsedMb: 58, memLimitMb: 16384 },
+          dashboardWatcher: { running: true, cpuPercent: 0.4, memUsedMb: 22, memLimitMb: 16384 },
+        },
+      };
+
+      let sessions = [];
+      let usingSampleData = false;
+
+      async function fetchJSON(url, opts) {
+        const res = await fetch(url, opts);
+        if (!res.ok) throw new Error(`${url} -> ${res.status}`);
+        return res.json();
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      /* ============================================================
+         REFRESH / CONNECTION INDICATOR
+         ============================================================ */
+      const refreshIndicator = document.getElementById("refreshIndicator");
+      const refreshGlyph = document.getElementById("refreshGlyph");
+      const refreshLabel = document.getElementById("refreshLabel");
+      const refreshAge = document.getElementById("refreshAge");
+      const REFRESH_GLYPHS = { connecting: "◐", live: "●", offline: "■" };
+      let lastRefreshAt = null;
+
+      function setRefreshState(state) {
+        refreshIndicator.dataset.state = state;
+        refreshGlyph.textContent = REFRESH_GLYPHS[state] || "◐";
+        refreshLabel.textContent = state;
+        if (state !== "connecting") lastRefreshAt = Date.now();
+      }
+
+      function tickRefreshAge() {
+        if (lastRefreshAt === null) {
+          refreshAge.textContent = "";
+          return;
+        }
+        const s = Math.floor((Date.now() - lastRefreshAt) / 1000);
+        refreshAge.textContent = s < 2 ? "updated just now" : `updated ${s}s ago`;
+      }
+      setInterval(tickRefreshAge, 1000);
+
+      /* ============================================================
+         RELATIVE TIME
+         lastActivity is a unix timestamp in seconds; accept either
+         seconds or milliseconds so this keeps working if that ever
+         changes upstream.
+         ============================================================ */
+      function relativeTime(ts) {
+        if (ts === null || ts === undefined) return "unknown";
+        const ms = ts > 1e12 ? ts : ts * 1000;
+        const diff = Math.max(0, Date.now() - ms);
+        const s = Math.floor(diff / 1000);
+        if (s < 5) return "just now";
+        if (s < 60) return `${s}s ago`;
+        const m = Math.floor(s / 60);
+        if (m < 60) return `${m}m ago`;
+        const h = Math.floor(m / 60);
+        if (h < 24) return `${h}h ago`;
+        const d = Math.floor(h / 24);
+        return `${d}d ago`;
+      }
+
+      function formatTokens(n) {
+        if (n === null || n === undefined) return null;
+        return n.toLocaleString();
+      }
+
+      /* ============================================================
+         SEGMENTED METER HELPERS — threshold-colored, not metric-colored
+         ============================================================ */
+      function meterColorFor(pct) {
+        if (pct > 85) return "var(--rose)";
+        if (pct > 60) return "var(--amber)";
+        return "var(--teal)";
+      }
+      function paintMeter(fillEl, pct) {
+        const clamped = Math.max(0, Math.min(100, pct || 0));
+        fillEl.style.width = `${clamped}%`;
+        fillEl.style.setProperty("--meter-color", meterColorFor(clamped));
+      }
+
+      /* ============================================================
+         SESSIONS — load / render
+         ============================================================ */
+      async function loadSessions() {
+        try {
+          sessions = await fetchJSON(API.sessions);
+          usingSampleData = false;
+          setRefreshState("live");
+        } catch (err) {
+          sessions = SAMPLE_SESSIONS;
+          usingSampleData = true;
+          setRefreshState("offline");
+        }
+        renderSessions();
+      }
+
+      async function renameSessionApi(slug, sessionId, name) {
+        if (usingSampleData) {
+          const s = sessions.find((x) => x.slug === slug && x.sessionId === sessionId);
+          if (s) s.name = name;
+          return true;
+        }
+        try {
+          await fetch(API.renameSession(slug, sessionId, name), { method: "POST" });
+          const s = sessions.find((x) => x.slug === slug && x.sessionId === sessionId);
+          if (s) s.name = name;
+          return true;
+        } catch (err) {
+          return false;
+        }
+      }
+
+      async function deleteSessionApi(slug, sessionId) {
+        if (!usingSampleData) {
+          try {
+            await fetch(API.deleteSession(slug, sessionId), { method: "POST" });
+          } catch (err) {
+            /* network hiccup: the next poll will reconcile card state */
+          }
+        }
+        sessions = sessions.filter((s) => !(s.slug === slug && s.sessionId === sessionId));
+        renderSessions();
+      }
+
+      const STATUS_META = {
+        running: { glyph: "●", label: "running", color: "var(--teal)" },
+        stopped: { glyph: "■", label: "stopped", color: "var(--rose)" },
+      };
+
+      function startRename(nameEl, s) {
+        const current = s.name || s.slug;
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "pane-rename-input";
+        input.value = current;
+        input.setAttribute("aria-label", `Rename session ${escapeHtml(current)}`);
+        nameEl.replaceWith(input);
+        input.focus();
+        input.select();
+
+        let settled = false;
+        async function commit() {
+          if (settled) return;
+          settled = true;
+          const next = input.value.trim();
+          if (next && next !== current) {
+            await renameSessionApi(s.slug, s.sessionId, next);
+          }
+          renderSessions();
+        }
+        function cancel() {
+          if (settled) return;
+          settled = true;
+          renderSessions();
+        }
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          } else if (e.key === "Escape") {
+            e.preventDefault();
+            cancel();
+          }
+        });
+        input.addEventListener("blur", () => commit());
+      }
+
+      function sessionCard(s) {
+        const status = s.status === "running" ? "running" : "stopped";
+        const meta = STATUS_META[status];
+        const el = document.createElement("article");
+        el.className = "pane";
+        el.dataset.slug = s.slug;
+        el.dataset.session = s.sessionId;
+
+        const tokens = formatTokens(s.tokensUsed);
+        const showUsage = status === "running" && (s.cpuPercent !== null || s.memUsedMb !== null);
+
+        el.innerHTML = `
+          <span class="corner-bl" aria-hidden="true"></span>
+          <span class="corner-br" aria-hidden="true"></span>
+          <div class="pane-titlebar">
+            <button type="button" class="pane-name" title="Click to rename">${escapeHtml(s.name || s.slug)}</button>
+            <span class="status-pill" data-status="${status}" style="--pill-color:${meta.color}">
+              <span class="status-glyph" aria-hidden="true">${meta.glyph}</span>${meta.label}
+            </span>
+          </div>
+          <span class="pane-path">${escapeHtml(s.cwd || "")}</span>
+          <div class="pane-meta">
+            ${
+              s.gitBranch
+                ? `<span class="git-branch">⎇ ${escapeHtml(s.gitBranch)}${s.gitDirty ? '<span class="dirty-dot" title="uncommitted changes"></span>' : ""}</span>`
+                : ""
+            }
+            ${tokens !== null ? `<span class="pane-tokens">${tokens} tok</span>` : ""}
+          </div>
+          ${
+            showUsage
+              ? `<div class="pane-usage">
+                  ${
+                    s.cpuPercent !== null
+                      ? `<div class="usage-row"><span class="usage-label">cpu</span><div class="meter meter-sm"><div class="meter-fill" data-usage="cpu"></div></div><span class="usage-value">${s.cpuPercent.toFixed(1)}%</span></div>`
+                      : ""
+                  }
+                  ${
+                    s.memUsedMb !== null
+                      ? `<div class="usage-row"><span class="usage-label">mem</span><div class="meter meter-sm"><div class="meter-fill" data-usage="mem" data-mem="${s.memUsedMb}"></div></div><span class="usage-value">${s.memUsedMb} MB</span></div>`
+                      : ""
+                  }
+                </div>`
+              : ""
+          }
+          <div class="pane-footer">
+            <span class="pane-time">${relativeTime(s.lastActivity)}</span>
+            <button type="button" class="btn pane-preview-btn">preview</button>
+            <button type="button" class="btn pane-delete" data-slug="${escapeHtml(s.slug)}" data-session="${escapeHtml(s.sessionId)}" title="Deletes only this session's transcript, not the project or other sessions">delete</button>
+          </div>
+        `;
+
+        // CPU meter fills against a 0-100 scale directly; memory has no
+        // fixed ceiling per-session, so it's shown as a small indicative
+        // bar against a soft 2048MB reference band, clamped, purely for
+        // at-a-glance scale -- the exact MB value is always in the text.
+        const cpuFill = el.querySelector('[data-usage="cpu"]');
+        if (cpuFill) paintMeter(cpuFill, s.cpuPercent);
+        const memFill = el.querySelector('[data-usage="mem"]');
+        if (memFill) paintMeter(memFill, (s.memUsedMb / 2048) * 100);
+
+        el.querySelector(".pane-name").addEventListener("click", (e) => startRename(e.currentTarget, s));
+        el.querySelector(".pane-preview-btn").addEventListener("click", () => openPreview(s));
+        el.querySelector(".pane-delete").addEventListener("click", onDeleteClick);
+
+        return el;
+      }
+
+      let deleteArmTimer = null;
+      function onDeleteClick(e) {
+        const btn = e.currentTarget;
+        if (btn.dataset.armed === "true") {
+          clearTimeout(deleteArmTimer);
+          const slug = btn.dataset.slug;
+          const sessionId = btn.dataset.session;
+          btn.closest(".pane").style.opacity = "0.35";
+          deleteSessionApi(slug, sessionId);
+          return;
+        }
+        document.querySelectorAll('.pane-delete[data-armed="true"]').forEach((b) => {
+          b.dataset.armed = "false";
+          b.textContent = "delete";
+        });
+        btn.dataset.armed = "true";
+        btn.textContent = "confirm?";
+        deleteArmTimer = setTimeout(() => {
+          btn.dataset.armed = "false";
+          btn.textContent = "delete";
+        }, 3000);
+      }
+
+      function renderSessions() {
+        const grid = document.getElementById("sessionGrid");
+        const count = document.getElementById("gridCount");
+        grid.innerHTML = "";
+        if (sessions.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state">
+              <strong>no sessions</strong>
+              nothing recorded yet. sessions appear here once started from the CLI.
+            </div>`;
+          count.textContent = "";
+          return;
+        }
+        for (const s of sessions) {
+          grid.appendChild(sessionCard(s));
+        }
+        count.textContent = `[${sessions.length} total]`;
+      }
+
+      setInterval(() => {
+        document.querySelectorAll(".pane").forEach((el) => {
+          const s = sessions.find((x) => x.slug === el.dataset.slug && x.sessionId === el.dataset.session);
+          const timeEl = el.querySelector(".pane-time");
+          if (s && timeEl) timeEl.textContent = relativeTime(s.lastActivity);
+        });
+      }, 5000);
+
+      /* ============================================================
+         PREVIEW MODAL
+         ============================================================ */
+      const previewDialog = document.getElementById("previewDialog");
+      const previewTitle = document.getElementById("previewTitle");
+      const previewBody = document.getElementById("previewBody");
+      document.getElementById("closePreview").addEventListener("click", () => previewDialog.close());
+
+      async function openPreview(s) {
+        previewTitle.textContent = `preview — ${s.name || s.slug}`;
+        previewBody.innerHTML = '<span class="empty">loading…</span>';
+        previewDialog.showModal();
+        let lines;
+        try {
+          if (usingSampleData) {
+            lines = SAMPLE_PREVIEWS[cardKey(s.slug, s.sessionId)] || [];
+          } else {
+            const data = await fetchJSON(API.preview(s.slug, s.sessionId));
+            lines = data.lines || [];
+          }
+        } catch (err) {
+          lines = null;
+        }
+        if (lines === null) {
+          previewBody.innerHTML = '<span class="empty">preview unavailable right now.</span>';
+        } else if (lines.length === 0) {
+          previewBody.innerHTML = '<span class="empty">no preview content for this session yet.</span>';
+        } else {
+          previewBody.textContent = lines.join("\n");
+        }
+      }
+
+      /* ============================================================
+         METRICS — LED bar meters, threshold-colored
+         ============================================================ */
+      const COMPANION_KEYS = ["comfyui", "headroom", "dashboard", "dashboardWatcher"];
+
+      function formatMb(mb) {
+        if (mb === null || mb === undefined) return "";
+        if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
+        return `${Math.round(mb)} MB`;
+      }
+
+      // docker reports a container's cpu% relative to a SINGLE core — a
+      // container busy across 3 cores on an 8-core host reads ~300%, not a
+      // bug. The meter bar is scaled against total host capacity (cores ×
+      // 100) so it still reads as "how much of the machine," while the text
+      // value keeps docker's own raw number, unscaled.
+      function paintCompanionCpu(key, cpuPercent, cores) {
+        const ceiling = cores && cores > 0 ? cores * 100 : 100;
+        paintMeter(document.getElementById(`companionCpuMeter-${key}`), (cpuPercent / ceiling) * 100);
+        document.getElementById(`companionCpuValue-${key}`).textContent = `${Math.round(cpuPercent)}%`;
+      }
+
+      function paintCompanionMem(key, usedMb, limitMb) {
+        const percent = limitMb ? (usedMb / limitMb) * 100 : 0;
+        paintMeter(document.getElementById(`companionMemMeter-${key}`), percent);
+        const value = document.getElementById(`companionMemValue-${key}`);
+        value.textContent = limitMb ? `${formatMb(usedMb)} / ${formatMb(limitMb)}` : formatMb(usedMb);
+      }
+
+      async function pollMetrics() {
+        let data;
+        try {
+          data = await fetchJSON(API.metrics);
+          if (!usingSampleData) setRefreshState("live");
+        } catch (err) {
+          data = usingSampleData ? SAMPLE_METRICS : null;
+        }
+        if (!data) return;
+
+        const h = data.host || {};
+        const ramPercent = h.memTotalMb ? (h.memUsedMb / h.memTotalMb) * 100 : 0;
+        paintMeter(document.getElementById("meterCpu"), h.cpuPercent ?? 0);
+        document.getElementById("valueCpu").textContent = `${Math.round(h.cpuPercent ?? 0)}%`;
+        paintMeter(document.getElementById("meterRam"), ramPercent);
+        document.getElementById("valueRam").textContent = `${Math.round(ramPercent)}%`;
+        document.getElementById("detailRam").textContent =
+          h.memUsedMb !== undefined ? `${formatMb(h.memUsedMb)} / ${formatMb(h.memTotalMb)}` : "";
+        paintMeter(document.getElementById("meterDisk"), h.diskUsedPercent ?? 0);
+        document.getElementById("valueDisk").textContent = `${Math.round(h.diskUsedPercent ?? 0)}%`;
+
+        const cores = h.cpuCores || 1;
+        document.getElementById("companionsNote").textContent =
+          cores > 1
+            ? `cpu below is per-container, relative to one core — this ${cores}-core host can show up to ${cores * 100}%`
+            : "cpu below is per-container, relative to one core";
+
+        const companions = data.companions || {};
+        COMPANION_KEYS.forEach((key) => {
+          const svc = companions[key];
+          const card = document.getElementById(`companionCard-${key}`);
+          if (!svc || !svc.running) {
+            card.classList.add("is-hidden");
+            return;
+          }
+          card.classList.remove("is-hidden");
+          paintCompanionCpu(key, svc.cpuPercent ?? 0, cores);
+          paintCompanionMem(key, svc.memUsedMb ?? 0, svc.memLimitMb ?? 0);
+        });
+      }
+
+      pollMetrics();
+      setInterval(pollMetrics, 2500);
+
+      /* ============================================================
+         SEARCH — full text across session history
+         ============================================================ */
+      const searchInput = document.getElementById("searchInput");
+      const searchPanel = document.getElementById("searchPanel");
+      const searchPanelHeading = document.getElementById("searchPanelHeading");
+      const searchResults = document.getElementById("searchResults");
+      let searchDebounce = null;
+
+      function localSearch(query) {
+        const q = query.toLowerCase();
+        return sessions
+          .filter((s) => [s.name, s.cwd].join(" ").toLowerCase().includes(q))
+          .map((s) => ({
+            slug: s.slug,
+            sessionId: s.sessionId,
+            name: s.name,
+            project: s.cwd ? s.cwd.split("/").filter(Boolean).pop() : s.slug,
+            line: s.cwd,
+            lineNumber: 0,
+          }));
+      }
+
+      function highlight(text, query) {
+        const idx = text.toLowerCase().indexOf(query.toLowerCase());
+        if (idx === -1) return escapeHtml(text);
+        return (
+          escapeHtml(text.slice(0, idx)) +
+          "<mark>" +
+          escapeHtml(text.slice(idx, idx + query.length)) +
+          "</mark>" +
+          escapeHtml(text.slice(idx + query.length))
+        );
+      }
+
+      function flashCard(slug, sessionId) {
+        document.querySelectorAll(".pane.is-match").forEach((el) => el.classList.remove("is-match"));
+        const card = document.querySelector(
+          `.pane[data-slug="${CSS.escape(slug)}"][data-session="${CSS.escape(sessionId)}"]`,
+        );
+        if (!card) return;
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        card.classList.add("is-match");
+        setTimeout(() => card.classList.remove("is-match"), 2500);
+      }
+
+      async function runSearch(query) {
+        if (!query) {
+          searchPanel.classList.remove("is-open");
+          searchResults.innerHTML = "";
+          return;
+        }
+        let results;
+        try {
+          results = await fetchJSON(`${API.search}?q=${encodeURIComponent(query)}&scope=all`);
+        } catch (err) {
+          results = localSearch(query);
+        }
+        searchResults.innerHTML = "";
+        searchPanelHeading.textContent = `results for "${query}"`;
+        if (results.length === 0) {
+          searchResults.innerHTML = `<div class="search-empty">no matches for "${escapeHtml(query)}"</div>`;
+        } else {
+          for (const r of results) {
+            const label = r.project ? `${r.project} › ${r.name || r.sessionId}` : r.name || r.slug;
+            const snippet = r.line || "";
+            if (r.slug && r.sessionId) {
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = "search-result";
+              btn.innerHTML = `${highlight(label, query)} <span class="line-no">line ${r.lineNumber ?? 0}</span><span class="snippet">${highlight(snippet, query)}</span>`;
+              btn.addEventListener("click", () => flashCard(r.slug, r.sessionId));
+              searchResults.appendChild(btn);
+            } else {
+              const row = document.createElement("div");
+              row.className = "search-result is-orphan";
+              row.innerHTML = `orphaned transcript <span class="line-no">line ${r.lineNumber ?? 0}</span><span class="snippet">${highlight(snippet, query)}</span>`;
+              searchResults.appendChild(row);
+            }
+          }
+        }
+        searchPanel.classList.add("is-open");
+      }
+
+      searchInput.addEventListener("input", (e) => {
+        clearTimeout(searchDebounce);
+        const q = e.target.value.trim();
+        searchDebounce = setTimeout(() => runSearch(q), 200);
+      });
+
+      loadSessions();
+      setInterval(loadSessions, 8000);
+    </script>
+  </body>
+</html>

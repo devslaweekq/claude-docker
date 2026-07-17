@@ -7,6 +7,7 @@
 #   launcher --pull     — pull latest image from Docker Hub, then start
 #   launcher --comfyui  — start ComfyUI Docker service before session, stop it on exit
 #   launcher --headroom — start Headroom proxy before session, route claude through it, stop it on exit
+#   launcher --dashboard — start the monitoring dashboard before session, stop it on exit
 #   launcher --install [--force] — add launcher to PATH (auto claude, or pick name if claude exists); --force re-runs install
 #   launcher <args…>    — passthrough: run `claude <args…>` in the container, then exit
 #                         (e.g. `claude auth status`, `claude login`, `claude setup-token`)
@@ -40,7 +41,7 @@ LAUNCHER="$SELF"
 [ -x "$INSTALL_DIR/launcher" ] && LAUNCHER="$INSTALL_DIR/launcher"
 
 # Keep in sync with version in package.json
-LAUNCHER_VERSION="1.4.10"
+LAUNCHER_VERSION="1.5.3"
 
 if [ "${1:-}" = "-v" ] || [ "${1:-}" = "--version" ]; then
   echo "claude-docker $LAUNCHER_VERSION"
@@ -154,6 +155,7 @@ force_pull=0
 force_build=0
 start_comfyui=0
 start_headroom=0
+start_dashboard=0
 passthrough_args=()                           # claude args forwarded into the container (claude auth status, login, …)
 
 for a in "$@"; do
@@ -162,6 +164,7 @@ for a in "$@"; do
     --build)     force_build=1 ;;
     --comfyui)   start_comfyui=1 ;;
     --headroom)  start_headroom=1 ;;
+    --dashboard) start_dashboard=1 ;;
     *)           passthrough_args+=("$a") ;;
   esac
 done
@@ -194,6 +197,7 @@ for _r in "${_roots[@]}"; do
     vol_opts+=(-v "$_s:/workspace/$_n")
     if [ "$here" = "$_s" ] || [ "${here#"$_s"/}" != "$here" ]; then
       mode_arg=("/workspace/$_n${here#"$_s"}")  # at/inside a subdir → session picker for it
+      project_name="$_n"
     fi
   done
 done
@@ -203,6 +207,15 @@ unset _roots _r _s _n
 if [ ${#mode_arg[@]} -eq 0 ] && [ "$at_root" -eq 0 ]; then
   scratch_run_opts=(-v "$here:/home/node/scratch:rw" -e SCRATCH_BIND_MOUNT=1)
 fi
+
+# Every session gets tagged with which project it belongs to (matched PROJECT_DIRS
+# subdir) — the dashboard watcher uses this label to correlate a running container
+# back to a project without needing any session-side registration. A scratch/root
+# session always cd's to /home/node/scratch inside the container regardless of the
+# host directory's name, so "scratch" is the only value recoverable from its
+# transcript too — label it that way rather than the host basename, which the
+# session's own transcript could never reproduce.
+project_name="${project_name:-scratch}"
 
 # Clipboard forwarding: prefer Wayland (wl-copy), fall back to X11 (xclip).
 # Claude Code selects: wl-copy > xclip > OSC 52. OSC 52 has UTF-8 encoding issues in
@@ -304,20 +317,73 @@ if [ "$start_headroom" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
   headroom_run_opts=(-e ANTHROPIC_BASE_URL=http://localhost:8787)
 fi
 
+# Dashboard: start Docker services on --dashboard (only for interactive sessions, not
+# passthrough). Starts the "dashboard" and "dashboard-watcher" services together as one
+# unit (the watcher is the only one holding docker.sock — see PORTS.md/README for why
+# they're split) and stops both together on exit, via the same ref-counting used for
+# --comfyui/--headroom.
+if [ "$start_dashboard" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
+  # Fail fast with a clear message instead of silently polling for 2 minutes — the
+  # container itself refuses to start without DASHBOARD_PASSWORD, which otherwise just
+  # looks like a hung readiness check with no indication of why.
+  _dashboard_password="$(grep -E '^DASHBOARD_PASSWORD=' .env | tail -1 | cut -d= -f2- | cut -d'#' -f1 | tr -d '"[:space:]' || true)"
+  if [ -z "$_dashboard_password" ]; then
+    echo "DASHBOARD_PASSWORD is not set in .env — required for --dashboard:" >&2
+    echo "  echo 'DASHBOARD_PASSWORD=choose-a-strong-password' >> .env" >&2
+    exit 1
+  fi
+  unset _dashboard_password
+
+  _svc_register dashboard
+  # DASHBOARD_PORT lives in .env (passed to the container via env_file), not the host
+  # shell — read it the same way PROJECT_DIRS is read above, so a custom port is
+  # actually detected.
+  _dashboard_port="$(grep -E '^DASHBOARD_PORT=' .env | tail -1 | cut -d= -f2- | cut -d'#' -f1 | tr -d '"[:space:]' || true)"
+  _dashboard_port="${_dashboard_port:-7900}"
+  # Every route (including "/") requires Basic auth, so a plain `curl -sf` readiness
+  # check would treat the expected 401 as failure — check for ANY response instead.
+  if [ "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$_dashboard_port/" 2>/dev/null)" != "000" ]; then
+    echo "==> Dashboard already running at localhost:$_dashboard_port — skipping start"
+  else
+    echo "==> Starting dashboard Docker services…"
+    docker compose -f ./docker-compose.yml --profile dashboard up -d dashboard dashboard-watcher
+    for _i in $(seq 1 60); do
+      [ "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$_dashboard_port/" 2>/dev/null)" != "000" ] && break
+      sleep 2
+    done
+    echo "    Dashboard ready at localhost:$_dashboard_port"
+  fi
+  unset _dashboard_port
+fi
+
 _cleanup_optional_services() {
   if [ "$start_comfyui" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
     _svc_unregister comfyui
     if ! _svc_in_use comfyui; then
       echo "==> Stopping ComfyUI Docker service…"
-      docker compose -f ./docker-compose.yml stop comfyui 2>/dev/null || true
+      docker compose -f ./docker-compose.yml rm -f -s comfyui 2>/dev/null || true
     fi
   fi
   if [ "$start_headroom" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
     _svc_unregister headroom
     if ! _svc_in_use headroom; then
       echo "==> Stopping Headroom Docker service…"
-      docker compose -f ./docker-compose.yml stop headroom 2>/dev/null || true
+      docker compose -f ./docker-compose.yml rm -f -s headroom 2>/dev/null || true
     fi
+  fi
+  if [ "$start_dashboard" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
+    _svc_unregister dashboard
+    if ! _svc_in_use dashboard; then
+      echo "==> Stopping dashboard Docker services…"
+      docker compose -f ./docker-compose.yml rm -f -s dashboard dashboard-watcher 2>/dev/null || true
+    fi
+  fi
+  # Safety net: `docker compose run --rm`'s own cleanup normally removes this
+  # session's container, but that cleanup can race with the `docker compose`
+  # invocations above when multiple sessions share this compose project
+  # concurrently — force it gone rather than leave an Exited container behind.
+  if [ -n "${_session_container_name:-}" ]; then
+    docker rm -f "$_session_container_name" >/dev/null 2>&1 || true
   fi
 }
 trap _cleanup_optional_services EXIT
@@ -333,9 +399,12 @@ if [ ${#passthrough_args[@]} -gt 0 ]; then
     --label claude-docker.role=exec claude --exec "${passthrough_args[@]}"
 fi
 
-if [ "$start_comfyui" -eq 1 ] || [ "$start_headroom" -eq 1 ]; then
+if [ "$start_comfyui" -eq 1 ] || [ "$start_headroom" -eq 1 ] || [ "$start_dashboard" -eq 1 ]; then
+  # Named explicitly (not compose's auto-generated name) so the EXIT trap's
+  # safety-net removal above can target this exact container.
+  _session_container_name="claude-docker-session-$$"
   # Without exec so the shell survives to run the EXIT trap (stops optional services on session end)
-  docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" "${x11_run_opts[@]}" "${headroom_run_opts[@]}" claude "${mode_arg[@]}"
+  docker compose -f ./docker-compose.yml run --rm --name "$_session_container_name" --label claude-docker.role=session --label "claude-docker.project=$project_name" "${vol_opts[@]}" "${scratch_run_opts[@]}" "${x11_run_opts[@]}" "${headroom_run_opts[@]}" claude "${mode_arg[@]}"
 else
-  exec docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" "${x11_run_opts[@]}" "${headroom_run_opts[@]}" claude "${mode_arg[@]}"
+  exec docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session --label "claude-docker.project=$project_name" "${vol_opts[@]}" "${scratch_run_opts[@]}" "${x11_run_opts[@]}" "${headroom_run_opts[@]}" claude "${mode_arg[@]}"
 fi

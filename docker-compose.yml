@@ -68,3 +68,42 @@ services:
     volumes:
       - ${HEADROOM_HOME}/.headroom:/home/nonroot/.headroom
     restart: 'no'
+
+  # Dashboard — read-only session monitoring, host network, listens on localhost:7900 (see PORTS.md)
+  dashboard:
+    image: slaweekq/claude-docker-dashboard:latest
+    labels:
+      - claude-docker.role=dashboard
+    profiles:
+      - dashboard
+    network_mode: host
+    user: 'node' # browser-facing; runs unprivileged, unlike dashboard-watcher (needs docker.sock)
+    entrypoint: ['/usr/local/bin/claude-dashboard-serve']
+    environment:
+      - LANG=en_US.UTF-8
+      - LC_ALL=en_US.UTF-8
+    env_file:
+      - .env
+    volumes:
+      - ${CLAUDE_HOME}:/home/node
+    restart: 'no'
+
+  # Dashboard watcher — headless container-stats collector, NO exposed port, holds docker.sock
+  # (read-only) so the browser-facing `dashboard` service above never needs it. See dashboard/README.md.
+  dashboard-watcher:
+    image: slaweekq/claude-docker-dashboard:latest
+    labels:
+      - claude-docker.role=dashboard-watcher
+    profiles:
+      - dashboard
+    network_mode: host
+    entrypoint: ['/usr/local/bin/claude-dashboard-watcher-serve']
+    environment:
+      - LANG=en_US.UTF-8
+      - LC_ALL=en_US.UTF-8
+    env_file:
+      - .env
+    volumes:
+      - ${CLAUDE_HOME}:/home/node
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: 'no'

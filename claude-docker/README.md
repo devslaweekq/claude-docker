@@ -13,6 +13,7 @@ Run [Claude Code](https://docs.anthropic.com/en/docs/claude-code) in an isolated
 - 🗂️ **Persistent sessions with resume** — an fzf menu over `/workspace` subdirectories, newest first, with a picker for scratch sessions and bash.
 - 🔌 **MCP servers pre-configured** — GitHub, Context7, Jira/Atlassian, Grafana, Sentry, Playwright, Kubernetes, and [ComfyUI](#comfyui--ai-image-generation) ready out of the box.
 - 🎨 **Optional GPU image generation** — `--comfyui` starts a thin, self-installing ComfyUI container alongside the session; Claude generates images directly via MCP.
+- 📊 **Optional monitoring dashboard** — `--dashboard` starts a read-only browser view of your active sessions and their resource usage — see [`dashboard/README.md`](../dashboard/README.md).
 - 🌐 **Corporate proxy support** — `HTTP_PROXY`/`HTTPS_PROXY` and self-signed TLS CA passthrough, for locked-down networks.
 - 📌 **User-level standing rules** — `~/.claude/CLAUDE.md` seeded once from `claude-defaults/` (never overwrites your edits), for behavioral rules that should apply across every project.
 - 📦 **Three ways to install** — clone the repo, a one-line install script, or pull the image directly and skip the clone entirely.
@@ -78,15 +79,16 @@ First run pulls the image from Docker Hub automatically.
 
 ### Commands
 
-| Command                                   | Action                                                          |
-| ------------------------------------------ | --------------------------------------------------------------- |
-| `./claude-docker/launcher`                | Start a session                                                 |
-| `./claude-docker/launcher --pull`         | Pull the latest image, then start                               |
-| `./claude-docker/launcher --build`        | Build the image locally (maintainers)                           |
-| `./claude-docker/launcher --comfyui`      | Start ComfyUI (Docker, GPU) before the session, stop it on exit |
-| `./claude-docker/launcher --headroom`     | Start Headroom proxy before the session, stop it on exit        |
-| `./claude-docker/launcher --install`      | Add a command to your PATH                                      |
-| `./claude-docker/launcher <claude args…>` | Passthrough — run `claude <args…>` in the container, then exit  |
+| Command                                   | Action                                                             |
+| ----------------------------------------- | ------------------------------------------------------------------ |
+| `./claude-docker/launcher`                | Start a session                                                    |
+| `./claude-docker/launcher --pull`         | Pull the latest image, then start                                  |
+| `./claude-docker/launcher --build`        | Build the image locally (maintainers)                              |
+| `./claude-docker/launcher --comfyui`      | Start ComfyUI (Docker, GPU) before the session, stop it on exit    |
+| `./claude-docker/launcher --headroom`     | Start Headroom proxy before the session, stop it on exit           |
+| `./claude-docker/launcher --dashboard`    | Start the monitoring dashboard before the session, stop it on exit |
+| `./claude-docker/launcher --install`      | Add a command to your PATH                                         |
+| `./claude-docker/launcher <claude args…>` | Passthrough — run `claude <args…>` in the container, then exit     |
 
 #### Passthrough
 
@@ -263,6 +265,12 @@ If `HTTP_PROXY` / `HTTPS_PROXY` are set in `.env` (see [Proxy](#proxy-optional))
 
 ---
 
+## Dashboard — session monitoring in the browser
+
+A read-only monitoring dashboard lives in its own service — see [`dashboard/README.md`](../dashboard/README.md) for setup and details. Start it with `./claude-docker/launcher --dashboard`, same flag pattern as `--comfyui`/`--headroom`.
+
+---
+
 ## Authentication
 
 | Method                              | When to use                                          |
@@ -346,7 +354,7 @@ TLS certificates are picked up at container start — no image rebuild needed.
 | Problem                                    | Fix                                                                                    |
 | ------------------------------------------ | -------------------------------------------------------------------------------------- |
 | `401` from Claude                          | Check `CLAUDE_CODE_OAUTH_TOKEN` or run `/login` inside the container                   |
-| First-run login screen even with token set | Make sure the token is in `--env-file` or use method A (`./claude-docker/launcher`)     |
+| First-run login screen even with token set | Make sure the token is in `--env-file` or use method A (`./claude-docker/launcher`)    |
 | `Settings Error` / invalid `settings.json` | Delete `~/claude-docker/home/.claude/settings.json` and restart — it will be recreated |
 | `cannot connect to Docker daemon`          | Start Docker Desktop / enable WSL integration                                          |
 
