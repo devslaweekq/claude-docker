@@ -59,7 +59,7 @@ If you're running the full [claude-docker](https://github.com/devslaweekq/claude
 stack instead of this image standalone, just use:
 
 ```bash
-./launcher --comfyui
+./claude-docker/launcher --comfyui
 ```
 
 which starts this container via `docker-compose.yml` (same volumes as above) before the

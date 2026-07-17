@@ -1,16 +1,16 @@
 # Installation
 
-Full guide: **[README.md](README.md)**
+Full guide: **[claude-docker/README.md](claude-docker/README.md)**
 
 Quick links:
 
-- [A. Clone the repository](README.md#a-clone-the-repository)
-- [B. Docker image only](README.md#b-docker-image-only-no-clone)
-- [Add to PATH](README.md#3-optional-add-to-path)
-- [Authentication](README.md#authentication)
-- [Proxy (optional)](README.md#proxy-optional)
-- [Troubleshooting](README.md#troubleshooting)
-- [Windows](README.md#windows)
+- [A. Clone the repository](claude-docker/README.md#a-clone-the-repository)
+- [B. Docker image only](claude-docker/README.md#b-docker-image-only-no-clone)
+- [Add to PATH](claude-docker/README.md#3-optional-add-to-path)
+- [Authentication](claude-docker/README.md#authentication)
+- [Proxy (optional)](claude-docker/README.md#proxy-optional)
+- [Troubleshooting](claude-docker/README.md#troubleshooting)
+- [Windows](claude-docker/README.md#windows)
 
 ---
 
@@ -31,7 +31,7 @@ git clone https://github.com/devslaweekq/claude-docker.git
 cd claude-docker
 cp .env.example .env && chmod 600 .env
 # set PROJECT_DIRS and CLAUDE_CODE_OAUTH_TOKEN in .env, then:
-./launcher
+./claude-docker/launcher
 ```
 
 ## Quickstart — image only

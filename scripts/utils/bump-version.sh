@@ -16,7 +16,7 @@ cd "$REPO"
 npm version "$NEW_VERSION" --no-git-tag-version --allow-same-version
 
 # 2. launcher
-sed -i "s/^LAUNCHER_VERSION=.*/LAUNCHER_VERSION=\"$NEW_VERSION\"/" launcher
+sed -i "s/^LAUNCHER_VERSION=.*/LAUNCHER_VERSION=\"$NEW_VERSION\"/" claude-docker/launcher
 
 # 3. changelog template
 CHANGELOG="changelogs/$DATE-$SLUG.md"

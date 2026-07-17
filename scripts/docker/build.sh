@@ -53,7 +53,7 @@ build_claude() {
     --cache-from type=registry,ref="$CACHE" \
     --cache-to   type=registry,ref="$CACHE",mode=max \
     -t "$REPO_IMAGE:latest" -t "$REPO_IMAGE:$VERSION" --load \
-    .
+    ./claude-docker
 
   echo "OK: $REPO_IMAGE:latest, $REPO_IMAGE:$VERSION  (cache → $CACHE)"
 }

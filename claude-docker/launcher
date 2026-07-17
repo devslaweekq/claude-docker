@@ -17,9 +17,21 @@ set -euo pipefail
 
 # caller cwd — before cd into the repo
 CALLER_PWD="$(pwd -P)"
-# real script path (works via symlink or PATH) -> repo root
+# real script path (works via symlink or PATH)
 SELF="$(readlink -f "$0")"
-REPO="$(dirname "$SELF")"
+SELF_DIR="$(dirname "$SELF")"
+
+# Locate docker-compose.yml relative to this script — two valid layouts:
+#   installed (curl installer / .deb): ~/claude-docker/launcher next to ~/claude-docker/docker-compose.yml (same dir)
+#   dev git-clone: <repo>/claude-docker/launcher, docker-compose.yml one level up at <repo>/
+if [ -f "$SELF_DIR/docker-compose.yml" ]; then
+  REPO="$SELF_DIR"
+elif [ -f "$SELF_DIR/../docker-compose.yml" ]; then
+  REPO="$(cd "$SELF_DIR/.." && pwd)"
+else
+  echo "launcher: cannot locate docker-compose.yml next to or above $SELF_DIR" >&2
+  exit 1
+fi
 
 INSTALL_DIR="$HOME/claude-docker"
 
@@ -28,7 +40,7 @@ LAUNCHER="$SELF"
 [ -x "$INSTALL_DIR/launcher" ] && LAUNCHER="$INSTALL_DIR/launcher"
 
 # Keep in sync with version in package.json
-LAUNCHER_VERSION="1.4.8"
+LAUNCHER_VERSION="1.4.9"
 
 if [ "${1:-}" = "-v" ] || [ "${1:-}" = "--version" ]; then
   echo "claude-docker $LAUNCHER_VERSION"

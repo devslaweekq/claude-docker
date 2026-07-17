@@ -1,6 +1,6 @@
 {
   "name": "claude-docker",
-  "version": "1.4.8",
+  "version": "1.4.9",
   "private": true,
   "description": "Isolated Claude Code in Docker",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "bump": "bash scripts/utils/bump-version.sh",
     "format": "prettier -w .",
     "format:check": "prettier -c .",
-    "launcher": "./launcher",
+    "launcher": "./claude-docker/launcher",
     "push": "bash scripts/docker/push.sh --all",
     "push:claude": "bash scripts/docker/push.sh --claude",
     "push:comfyui": "bash scripts/docker/push.sh --comfyui"

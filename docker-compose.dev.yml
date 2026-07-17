@@ -1,6 +1,7 @@
 services:
   claude-dev:
-    build: .
+    build:
+      context: ./claude-docker
     image: slaweekq/claude-docker:latest
     labels:
       - claude-docker.role=session
@@ -17,7 +18,7 @@ services:
       # persistent Claude home on host (~/claude-docker/home)
       - ${CLAUDE_HOME}:/home/node
       # TLS proxy CA(s) — same as old Dockerfile COPY certs/, applied at start
-      - ./certs:/tmp/certs-input:ro
+      - ./claude-docker/certs:/tmp/certs-input:ro
       # /workspace/<name> mounts are passed dynamically by the launcher via -v flags (PROJECT_DIRS)
 
   # ComfyUI — host network, listens on localhost:8188 (see PORTS.md)

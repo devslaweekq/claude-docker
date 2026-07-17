@@ -12,21 +12,21 @@ All services in this project use **`network_mode: host`**. Containers bind ports
 Start examples:
 
 ```bash
-./launcher --comfyui
-./launcher --headroom
-./launcher --comfyui --headroom
+./claude-docker/launcher --comfyui
+./claude-docker/launcher --headroom
+./claude-docker/launcher --comfyui --headroom
 ```
 
 ## Claude session container
 
 The `claude` service does not expose a fixed HTTP port. It is an interactive shell (`claude-launch` / Claude Code). MCP servers and tools inside the session reach optional services via `localhost` because every service shares the host network stack.
 
-| Consumer              | Target                         | Notes                                      |
-| --------------------- | ------------------------------ | ------------------------------------------ |
+| Consumer              | Target                         | Notes                                           |
+| --------------------- | ------------------------------ | ----------------------------------------------- |
 | `claude-mem` plugin   | `http://localhost:37777`       | Worker + web viewer (plugin hooks, not compose) |
-| `comfyui-mcp` (MCP)   | `http://localhost:8188`        | Set in `claude-defaults/mcp.json`          |
-| Headroom proxy client | `http://localhost:8787`        | e.g. `ANTHROPIC_BASE_URL` when using proxy |
-| Anthropic API         | `api.anthropic.com` (outbound) | Direct or via `HTTP_PROXY` in `.env`       |
+| `comfyui-mcp` (MCP)   | `http://localhost:8188`        | Set in `claude-docker/claude-defaults/mcp.json` |
+| Headroom proxy client | `http://localhost:8787`        | e.g. `ANTHROPIC_BASE_URL` when using proxy      |
+| Anthropic API         | `api.anthropic.com` (outbound) | Direct or via `HTTP_PROXY` in `.env`            |
 
 ## Why not `ports:` in compose?
 
