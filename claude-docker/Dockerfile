@@ -2,15 +2,18 @@ FROM node:24.18.0-slim
 
 # Base tools + git/PR + DB clients (psql, mysql, redis-cli) + GitHub CLI + Claude Code.
 # User node (uid 1000) already exists in the image.
+# One RUN for both apt-get passes (the second needs curl+gnupg from the first to add the
+# GitHub CLI repo) so /var/lib/apt/lists is cleaned exactly once, at the end: cleaning it in
+# an earlier, separate RUN wouldn't shrink that layer's diff, since Docker layers are
+# immutable — a later layer's deletion only hides the files, it doesn't reclaim the space.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       git git-lfs openssh-client ca-certificates curl less jq gnupg fzf \
       postgresql-client default-mysql-client redis-tools \
-      ruby unzip locales xclip wl-clipboard \
+      unzip locales xclip wl-clipboard \
  && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
- && locale-gen
-
-RUN install -m 0755 -d /etc/apt/keyrings \
+ && locale-gen \
+ && install -m 0755 -d /etc/apt/keyrings \
  && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
       | gpg --dearmor -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
  && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
