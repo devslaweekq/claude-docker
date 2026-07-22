@@ -19,8 +19,11 @@ RUN install -m 0755 -d /etc/apt/keyrings \
  && apt-get update && apt-get install -y --no-install-recommends gh \
  && rm -rf /var/lib/apt/lists/*
 
-# Claude Code in /usr/local — image seed; runtime prefers ~/.npm-global (writable, on volume).
-RUN npm install -g @anthropic-ai/claude-code@latest jimp \
+# Claude Code is installed at runtime by ensure-claude-cli.sh into ~/.npm-global (on volume, node user).
+# That script always runs before `claude` is invoked (menu.sh sources it under set -e), so a
+# build-time copy here is never read: /home/node is entirely bind-mounted from the host at
+# container start, and PATH always prefers ~/.npm-global — dead weight, not a fallback.
+RUN npm install -g jimp \
  && npm cache clean --force \
  && mkdir -p /home/node/.claude /home/node/.npm-global /workspace \
  && chown -R node:node /home/node /workspace
