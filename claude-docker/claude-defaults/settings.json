@@ -12,7 +12,7 @@
     ]
   },
   "enabledPlugins": {
-    "claude-mem@thedotmack": true,
+    "claude-mem@thedotmack": false,
     "figma@claude-plugins-official": false,
     "superpowers@claude-plugins-official": true
   },
@@ -33,21 +33,27 @@
   "gitAttribution": true,
   "includeCoAuthoredBy": false,
   "permissions": {
-    "allow": ["Read(.env.example)", "WebSearch", "WebFetch"],
+    "allow": [
+      "Read(**/.env.example)",
+      "Read(**/.env.ci)",
+      "Read(**/.env.development)",
+      "Read(**/.env.test)",
+      "WebSearch",
+      "WebFetch"
+    ],
     "defaultMode": "auto",
     "deny": [
-      "Read(.env*)",
       "Read(./secrets/**)",
       "Read(./**/credentials.json)",
       "Read(./**/service-account.json)",
       "Bash(rm -rf /)",
       "Read(**/.env)",
       "Read(**/.env.local)",
-      "Read(**/.env.production)",
-      "Read(**/.env.development)",
-      "Read(**/.env.staging)",
-      "Read(**/.env.test)"
+      "Read(**/.env.*.local)"
     ]
+  },
+  "skillOverrides": {
+    "video-use": "off"
   },
   "skipWorkflowUsageWarning": true,
   "spinnerTipsEnabled": false,
