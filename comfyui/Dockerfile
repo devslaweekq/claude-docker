@@ -1,4 +1,4 @@
-FROM nvidia/cuda:13.3.0-base-ubuntu24.04
+FROM nvidia/cuda:13.4.1-base-ubuntu24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
