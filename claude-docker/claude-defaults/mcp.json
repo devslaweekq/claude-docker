@@ -62,6 +62,11 @@
     "sentry": {
       "type": "http",
       "url": "https://mcp.sentry.dev/mcp"
+    },
+    "yandex-cloud": {
+      "args": ["-y", "@yandex-cloud/mcp", "-s", "toolkit"],
+      "command": "npx",
+      "type": "stdio"
     }
   }
 }
