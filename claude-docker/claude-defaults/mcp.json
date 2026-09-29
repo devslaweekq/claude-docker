@@ -54,7 +54,7 @@
       "type": "stdio"
     },
     "playwright": {
-      "args": ["-y", "@playwright/mcp@latest"],
+      "args": ["-y", "@playwright/mcp@latest", "--headless", "--no-sandbox"],
       "command": "npx",
       "env": {},
       "type": "stdio"

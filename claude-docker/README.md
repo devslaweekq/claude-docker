@@ -79,7 +79,7 @@ First run pulls the image from Docker Hub automatically.
 ### Commands
 
 | Command                                   | Action                                                          |
-| ------------------------------------------ | --------------------------------------------------------------- |
+| ----------------------------------------- | --------------------------------------------------------------- |
 | `./claude-docker/launcher`                | Start a session                                                 |
 | `./claude-docker/launcher --pull`         | Pull the latest image, then start                               |
 | `./claude-docker/launcher --build`        | Build the image locally (maintainers)                           |
@@ -298,7 +298,7 @@ Claude Code, `git`, `gh` (GitHub CLI), `fzf`, `bun`, DB clients (`psql`, `mysql`
 | claude-mem | Session memory search — `search`, `timeline`, `get_observations` at localhost:37777 |
 | headroom   | Local Headroom proxy at localhost:8787 (`--headroom` flag)                          |
 | github     | GitHub (requires `GH_TOKEN`)                                                        |
-| playwright | Browser automation                                                                  |
+| playwright | Browser automation (headless; Chrome/Chromium baked into the image)                 |
 | context7   | Library docs (requires `CONTEXT7_API_KEY`)                                          |
 | figma      | Figma designs                                                                       |
 | atlassian  | Jira (requires `JIRA_*` vars)                                                       |
@@ -346,7 +346,7 @@ TLS certificates are picked up at container start — no image rebuild needed.
 | Problem                                    | Fix                                                                                    |
 | ------------------------------------------ | -------------------------------------------------------------------------------------- |
 | `401` from Claude                          | Check `CLAUDE_CODE_OAUTH_TOKEN` or run `/login` inside the container                   |
-| First-run login screen even with token set | Make sure the token is in `--env-file` or use method A (`./claude-docker/launcher`)     |
+| First-run login screen even with token set | Make sure the token is in `--env-file` or use method A (`./claude-docker/launcher`)    |
 | `Settings Error` / invalid `settings.json` | Delete `~/claude-docker/home/.claude/settings.json` and restart — it will be recreated |
 | `cannot connect to Docker daemon`          | Start Docker Desktop / enable WSL integration                                          |
 
