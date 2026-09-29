@@ -26,6 +26,7 @@ The `claude` service does not expose a fixed HTTP port. It is an interactive she
 | `claude-mem` plugin   | `http://localhost:37777`       | Worker + web viewer (plugin hooks, not compose) |
 | `comfyui-mcp` (MCP)   | `http://localhost:8188`        | Set in `claude-docker/claude-defaults/mcp.json` |
 | Headroom proxy client | `http://localhost:8787`        | e.g. `ANTHROPIC_BASE_URL` when using proxy      |
+| `playwright` (MCP)    | `http://localhost:8931/mcp`    | Host-side `@playwright/mcp`, started by launcher |
 | Anthropic API         | `api.anthropic.com` (outbound) | Direct or via `HTTP_PROXY` in `.env`            |
 
 ## Why not `ports:` in compose?

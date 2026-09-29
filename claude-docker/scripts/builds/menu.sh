@@ -47,6 +47,23 @@ if [ -f "$DEF/settings.json" ]; then
   fi
 fi
 
+# Playwright MCP moved from an in-container stdio server (no browser in the image → always failed) to an HTTP
+# server the host launcher starts. Migrate only the untouched old shipped entry; customized entries stay as-is.
+if [ -f "$HOME/.claude.json" ] && [ -f "$DEF/mcp.json" ]; then
+  _pw_tmp="$(mktemp)"
+  if jq --slurpfile d "$DEF/mcp.json" \
+       'if (.mcpServers.playwright.command? == "npx")
+           and ((.mcpServers.playwright.args // []) | (. == ["-y","@playwright/mcp@latest"]
+                or . == ["-y","@playwright/mcp@latest","--headless","--no-sandbox"]))
+        then .mcpServers.playwright = $d[0].mcpServers.playwright else . end' \
+       "$HOME/.claude.json" > "$_pw_tmp" 2>/dev/null && [ -s "$_pw_tmp" ]; then
+    mv "$_pw_tmp" "$HOME/.claude.json"
+  else
+    rm -f "$_pw_tmp"
+  fi
+  unset _pw_tmp
+fi
+
 # user-level CLAUDE.md (standing rules across all projects) — seed once, never overwrite user edits
 if [ ! -f "$HOME/.claude/CLAUDE.md" ] && [ -f "$DEF/CLAUDE.md" ]; then
   cp "$DEF/CLAUDE.md" "$HOME/.claude/CLAUDE.md"

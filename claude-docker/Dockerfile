@@ -31,22 +31,6 @@ RUN npm install -g jimp \
  && mkdir -p /home/node/.claude /home/node/.npm-global /workspace \
  && chown -R node:node /home/node /workspace
 
-# Playwright + Google Chrome, baked in so @playwright/mcp works out of the box (no runtime download).
-# `install chrome` places Chrome at /opt/google/chrome/chrome — the path the MCP server's default
-# `chrome` channel looks for. Google ships no Linux arm64 Chrome, so arm64 builds fall back to
-# Chromium (browsers under /opt/ms-playwright, not /home/node, which is bind-mounted at runtime).
-# --with-deps pulls the system libraries; lists are cleaned in the same RUN so the layer stays small.
-ENV PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
-RUN npm install -g playwright \
- && if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
-      playwright install --with-deps chrome; \
-    else \
-      playwright install --with-deps chromium; \
-    fi \
- && chmod -R a+rX /opt/ms-playwright 2>/dev/null || true \
- && npm cache clean --force \
- && rm -rf /var/lib/apt/lists/*
-
 # Bun — copy ready binary from official image (faster and more reliable than curl script)
 COPY --from=oven/bun:latest /usr/local/bin/bun /usr/local/bin/bun
 COPY --from=oven/bun:latest /usr/local/bin/bunx /usr/local/bin/bunx

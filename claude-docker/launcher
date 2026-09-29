@@ -7,6 +7,7 @@
 #   launcher --pull     — pull latest image from Docker Hub, then start
 #   launcher --comfyui  — start ComfyUI Docker service before session, stop it on exit
 #   launcher --headroom — start Headroom proxy before session, route claude through it, stop it on exit
+#   launcher --no-playwright — don't start the host-side Playwright MCP server (needs node + Chrome on the host)
 #   launcher --install [--force] — add launcher to PATH (auto claude, or pick name if claude exists); --force re-runs install
 #   launcher <args…>    — passthrough: run `claude <args…>` in the container, then exit
 #                         (e.g. `claude auth status`, `claude login`, `claude setup-token`)
@@ -40,7 +41,7 @@ LAUNCHER="$SELF"
 [ -x "$INSTALL_DIR/launcher" ] && LAUNCHER="$INSTALL_DIR/launcher"
 
 # Keep in sync with version in package.json
-LAUNCHER_VERSION="1.4.14"
+LAUNCHER_VERSION="1.4.15"
 
 if [ "${1:-}" = "-v" ] || [ "${1:-}" = "--version" ]; then
   echo "claude-docker $LAUNCHER_VERSION"
@@ -154,6 +155,7 @@ force_pull=0
 force_build=0
 start_comfyui=0
 start_headroom=0
+start_playwright=1
 passthrough_args=()                           # claude args forwarded into the container (claude auth status, login, …)
 
 for a in "$@"; do
@@ -162,6 +164,7 @@ for a in "$@"; do
     --build)     force_build=1 ;;
     --comfyui)   start_comfyui=1 ;;
     --headroom)  start_headroom=1 ;;
+    --no-playwright) start_playwright=0 ;;
     *)           passthrough_args+=("$a") ;;
   esac
 done
@@ -237,6 +240,14 @@ if [ "$force_pull" -eq 1 ] || ! docker image inspect "$IMAGE" >/dev/null 2>&1; t
   docker compose -f ./docker-compose.yml pull
 fi
 
+# Once per launcher version (e.g. after `apt upgrade`): refresh the image so container-side migrations
+# (menu.sh) match the new launcher. Never fatal — an offline start must still work.
+_pull_marker="$(dirname "$CLAUDE_HOME")/.pulled-launcher-version"
+if [ "$force_build" -eq 0 ] && [ "$(cat "$_pull_marker" 2>/dev/null || true)" != "$LAUNCHER_VERSION" ]; then
+  [ "$force_pull" -eq 1 ] || docker compose -f ./docker-compose.yml pull || true
+  echo "$LAUNCHER_VERSION" > "$_pull_marker" 2>/dev/null || true
+fi
+
 # Build image only on explicit --build (regular users always pull a prebuilt image)
 if [ "$force_build" -eq 1 ]; then
   docker compose -f ./docker-compose.dev.yml build \
@@ -304,7 +315,79 @@ if [ "$start_headroom" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
   headroom_run_opts=(-e ANTHROPIC_BASE_URL=http://localhost:8787)
 fi
 
+# Playwright MCP: the browser lives on the host, not in the image (keeps the image small).
+# The launcher starts `@playwright/mcp` on localhost:$PW_PORT; the container reaches it over the host
+# network (mcp.json: http://localhost:$PW_PORT/mcp). --isolated keeps the browser profile in memory, so
+# no host cookies/logins are exposed to the session. Needs node/npx on the host; silently skipped otherwise.
+PW_PORT=8931
+PW_PIDFILE="$_SVC_LOCK_DIR/playwright.pid"
+pw_registered=0
+
+_pw_up() { curl -s -o /dev/null --max-time 2 "http://localhost:$PW_PORT/mcp"; }
+
+# Print the browser flags for @playwright/mcp; empty output = no usable browser found.
+_pw_browser_args() {
+  local b
+  for b in google-chrome-stable google-chrome; do
+    command -v "$b" >/dev/null 2>&1 && { echo "--browser chrome"; return; }
+  done
+  for b in chromium chromium-browser; do
+    command -v "$b" >/dev/null 2>&1 && { echo "--executable-path $(command -v "$b")"; return; }
+  done
+  # No system browser: fetch Playwright's Chromium into ~/.cache/ms-playwright (user space, no sudo), once.
+  b="$(find "$HOME/.cache/ms-playwright" -maxdepth 3 -type f -name chrome 2>/dev/null | sort | tail -1)"
+  if [ -z "$b" ]; then
+    echo "==> No Chrome found on host — installing Playwright Chromium (one-time)…" >&2
+    npx -y playwright install chromium >&2 || true
+    b="$(find "$HOME/.cache/ms-playwright" -maxdepth 3 -type f -name chrome 2>/dev/null | sort | tail -1)"
+  fi
+  [ -n "$b" ] && echo "--executable-path $b"
+  return 0
+}
+
+_pw_start() {
+  if _pw_up; then
+    pw_registered=1; _svc_register playwright
+    return
+  fi
+  if ! command -v npx >/dev/null 2>&1; then
+    echo "==> Playwright MCP skipped: node/npx not found on host (sudo apt install nodejs npm; --no-playwright to silence)" >&2
+    return
+  fi
+  local browser_args mode=()
+  browser_args="$(_pw_browser_args)"
+  if [ -z "$browser_args" ]; then
+    echo "==> Playwright MCP skipped: no browser on host (install google-chrome-stable or chromium)" >&2
+    return
+  fi
+  { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; } || mode=(--headless)
+  echo "==> Starting Playwright MCP on host (localhost:$PW_PORT)…"
+  mkdir -p "$_SVC_LOCK_DIR"
+  # setsid: own process group, so Ctrl+C in the session doesn't kill it and we can stop the whole tree later
+  # shellcheck disable=SC2086  # browser_args is intentionally word-split
+  setsid npx -y @playwright/mcp@latest --port "$PW_PORT" --isolated $browser_args "${mode[@]}" \
+    >"${TMPDIR:-/tmp}/claude-playwright-mcp.log" 2>&1 &
+  echo $! > "$PW_PIDFILE"
+  pw_registered=1; _svc_register playwright
+  for _i in $(seq 1 60); do
+    _pw_up && return
+    sleep 1
+  done
+  echo "    Playwright MCP not ready yet — see ${TMPDIR:-/tmp}/claude-playwright-mcp.log" >&2
+}
+
+if [ "$start_playwright" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
+  _pw_start
+fi
+
 _cleanup_optional_services() {
+  if [ "$pw_registered" -eq 1 ]; then
+    _svc_unregister playwright
+    if ! _svc_in_use playwright && [ -f "$PW_PIDFILE" ]; then
+      kill -- "-$(cat "$PW_PIDFILE")" 2>/dev/null || true
+      rm -f "$PW_PIDFILE"
+    fi
+  fi
   if [ "$start_comfyui" -eq 1 ] && [ ${#passthrough_args[@]} -eq 0 ]; then
     _svc_unregister comfyui
     if ! _svc_in_use comfyui; then
@@ -333,7 +416,7 @@ if [ ${#passthrough_args[@]} -gt 0 ]; then
     --label claude-docker.role=exec claude --exec "${passthrough_args[@]}"
 fi
 
-if [ "$start_comfyui" -eq 1 ] || [ "$start_headroom" -eq 1 ]; then
+if [ "$start_comfyui" -eq 1 ] || [ "$start_headroom" -eq 1 ] || [ "$pw_registered" -eq 1 ]; then
   # Without exec so the shell survives to run the EXIT trap (stops optional services on session end)
   docker compose -f ./docker-compose.yml run --rm --label claude-docker.role=session "${vol_opts[@]}" "${scratch_run_opts[@]}" "${x11_run_opts[@]}" "${headroom_run_opts[@]}" claude "${mode_arg[@]}"
 else

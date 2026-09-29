@@ -298,7 +298,7 @@ Claude Code, `git`, `gh` (GitHub CLI), `fzf`, `bun`, DB clients (`psql`, `mysql`
 | claude-mem | Session memory search — `search`, `timeline`, `get_observations` at localhost:37777 |
 | headroom   | Local Headroom proxy at localhost:8787 (`--headroom` flag)                          |
 | github     | GitHub (requires `GH_TOKEN`)                                                        |
-| playwright | Browser automation (headless; Chrome/Chromium baked into the image)                 |
+| playwright | Browser automation — runs on the host (launcher starts it), needs `node` + Chrome   |
 | context7   | Library docs (requires `CONTEXT7_API_KEY`)                                          |
 | figma      | Figma designs                                                                       |
 | atlassian  | Jira (requires `JIRA_*` vars)                                                       |

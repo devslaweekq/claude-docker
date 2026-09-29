@@ -54,10 +54,8 @@
       "type": "stdio"
     },
     "playwright": {
-      "args": ["-y", "@playwright/mcp@latest", "--headless", "--no-sandbox"],
-      "command": "npx",
-      "env": {},
-      "type": "stdio"
+      "type": "http",
+      "url": "http://localhost:8931/mcp"
     },
     "sentry": {
       "type": "http",
