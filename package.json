@@ -21,8 +21,8 @@
     "push:comfyui": "bash scripts/docker/push.sh --comfyui"
   },
   "devDependencies": {
-    "prettier": "^3.9.5",
-    "prettier-plugin-packagejson": "^3.0.2",
+    "prettier": "^3.9.10",
+    "prettier-plugin-packagejson": "^3.0.3",
     "prettier-plugin-sort-json": "^4.2.0"
   }
 }
