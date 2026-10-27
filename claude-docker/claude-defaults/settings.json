@@ -11,9 +11,12 @@
       "Parallel subagents for research, exploration, and documentation tasks are routine"
     ]
   },
+  "editorMode": "normal",
   "enabledPlugins": {
     "claude-mem@thedotmack": false,
+    "devslaweekq@devslaweekq-skills": true,
     "figma@claude-plugins-official": false,
+    "pymobiledevice3-device-operator@pymobiledevice3": true,
     "superpowers@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
@@ -21,6 +24,18 @@
       "source": {
         "source": "git",
         "url": "https://github.com/anthropics/claude-plugins-official.git"
+      }
+    },
+    "devslaweekq-skills": {
+      "source": {
+        "repo": "devslaweekq/best-skills",
+        "source": "github"
+      }
+    },
+    "pymobiledevice3": {
+      "source": {
+        "repo": "doronz88/pymobiledevice3",
+        "source": "github"
       }
     },
     "thedotmack": {
@@ -32,6 +47,7 @@
   },
   "gitAttribution": true,
   "includeCoAuthoredBy": false,
+  "model": "sonnet",
   "permissions": {
     "allow": [
       "Read(**/.env.example)",
@@ -58,6 +74,7 @@
   "skipWorkflowUsageWarning": true,
   "spinnerTipsEnabled": false,
   "theme": "dark-ansi",
+  "timeFormat": "24-hour",
   "verbose": false,
   "viewMode": "focus"
 }
