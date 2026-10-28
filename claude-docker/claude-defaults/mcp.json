@@ -53,6 +53,13 @@
       },
       "type": "stdio"
     },
+    "outline": {
+      "type": "http",
+      "url": "${OUTLINE_URL:-}/mcp",
+      "headers": {
+        "Authorization": "Bearer ${OUTLINE_API_TOKEN:-}"
+      }
+    },
     "playwright": {
       "type": "http",
       "url": "http://localhost:8931/mcp"

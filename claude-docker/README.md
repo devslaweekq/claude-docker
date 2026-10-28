@@ -11,7 +11,7 @@ Run [Claude Code](https://docs.anthropic.com/en/docs/claude-code) in an isolated
 ## Features
 
 - 🗂️ **Persistent sessions with resume** — an fzf menu over `/workspace` subdirectories, newest first, with a picker for scratch sessions and bash.
-- 🔌 **MCP servers pre-configured** — GitHub, Context7, Jira/Atlassian, Grafana, Sentry, Playwright, Kubernetes, and [ComfyUI](#comfyui--ai-image-generation) ready out of the box.
+- 🔌 **MCP servers pre-configured** — GitHub, Context7, Jira/Atlassian, Grafana, Outline, Sentry, Playwright, Kubernetes, and [ComfyUI](#comfyui--ai-image-generation) ready out of the box.
 - 🎨 **Optional GPU image generation** — `--comfyui` starts a thin, self-installing ComfyUI container alongside the session; Claude generates images directly via MCP.
 - 🌐 **Corporate proxy support** — `HTTP_PROXY`/`HTTPS_PROXY` and self-signed TLS CA passthrough, for locked-down networks.
 - 📌 **User-level standing rules** — `~/.claude/CLAUDE.md` seeded once from `claude-defaults/` (never overwrites your edits), for behavioral rules that should apply across every project.
