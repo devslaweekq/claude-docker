@@ -5,6 +5,8 @@ Optional **self-signed TLS proxy** CA. Not needed for direct access or HTTP prox
 Compose mounts `./certs` → `/tmp/certs-input`. Entrypoint `update-certs.sh` (in the image) copies `*.crt` into the system store and runs `update-ca-certificates`.
 
 ```bash
-cp /path/to/your-proxy.crt certs/proxy.crt # gitignored
+cd ~
+echo | openssl s_client -connect api.anthropic.com:443 -servername api.anthropic.com -showcerts 2>/dev/null   | openssl x509 -outform PEM > proxy-ca.crt
+cp ~/proxy-ca.crt certs/proxy.crt # gitignored
 ./claude-docker/launcher                   # restart after cert change
 ```
