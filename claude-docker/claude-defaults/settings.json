@@ -15,9 +15,10 @@
   "enabledPlugins": {
     "claude-mem@thedotmack": false,
     "devslaweekq@devslaweekq-skills": true,
-    "figma@claude-plugins-official": false,
+    "figma@claude-plugins-official": true,
     "pymobiledevice3-device-operator@pymobiledevice3": true,
-    "superpowers@claude-plugins-official": true
+    "superpowers@claude-plugins-official": true,
+    "cc-plugin-you-should-know@builtin": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
@@ -30,19 +31,22 @@
       "source": {
         "repo": "devslaweekq/best-skills",
         "source": "github"
-      }
+      },
+      "autoUpdate": true
     },
     "pymobiledevice3": {
       "source": {
         "repo": "doronz88/pymobiledevice3",
         "source": "github"
-      }
+      },
+      "autoUpdate": true
     },
     "thedotmack": {
       "source": {
         "source": "git",
         "url": "https://github.com/thedotmack/claude-mem.git"
-      }
+      },
+      "autoUpdate": true
     }
   },
   "gitAttribution": true,
@@ -68,11 +72,19 @@
       "Read(**/.env.*.local)"
     ]
   },
+  "pluginConfigs": {
+    "cc-plugin-agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-or-agents-md"
+      }
+    }
+  },
   "skillOverrides": {
     "video-use": "off"
   },
   "skipWorkflowUsageWarning": true,
   "spinnerTipsEnabled": false,
+  "switchModelsOnFlag": false,
   "theme": "dark-ansi",
   "timeFormat": "24-hour",
   "verbose": false,
