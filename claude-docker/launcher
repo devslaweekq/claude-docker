@@ -41,7 +41,7 @@ LAUNCHER="$SELF"
 [ -x "$INSTALL_DIR/launcher" ] && LAUNCHER="$INSTALL_DIR/launcher"
 
 # Keep in sync with version in package.json
-LAUNCHER_VERSION="1.4.18"
+LAUNCHER_VERSION="1.4.19"
 
 if [ "${1:-}" = "-v" ] || [ "${1:-}" = "--version" ]; then
   echo "claude-docker $LAUNCHER_VERSION"
@@ -361,6 +361,16 @@ _pw_start() {
     return
   fi
   { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; } || mode=(--headless)
+  # Ubuntu 23.10+ blocks unprivileged user namespaces via AppArmor, so a downloaded Chromium (Playwright cache,
+  # snap chromium) dies with "No usable sandbox!". Google Chrome (--browser chrome) ships its own AppArmor profile,
+  # so only the --executable-path case needs --no-sandbox. Acceptable here: --isolated profile, and the browser
+  # only opens pages Claude asks for.
+  case "$browser_args" in
+    *--executable-path*)
+      if [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = "1" ]; then
+        mode+=(--no-sandbox)
+      fi ;;
+  esac
   echo "==> Starting Playwright MCP on host (localhost:$PW_PORT)…"
   mkdir -p "$_SVC_LOCK_DIR"
   # setsid: own process group, so Ctrl+C in the session doesn't kill it and we can stop the whole tree later
