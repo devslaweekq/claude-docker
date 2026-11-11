@@ -1,37 +1,37 @@
 Origin: claude-docker
 Label: claude-docker
 Codename: stable
-Date: Wed, 28 Oct 2026 16:52:17 UTC
+Date: Wed, 11 Nov 2026 12:53:07 UTC
 Architectures: amd64 arm64 i386
 Components: main
 Description: Claude Docker launcher apt repository
 MD5Sum:
- 7a9461be6c31515df741d35499fa7a8b 693 main/binary-amd64/Packages
- 4f2a5267502db69e929df7257905056b 477 main/binary-amd64/Packages.gz
+ 00e9e1ccac5ad5e9da726be8048e1825 693 main/binary-amd64/Packages
+ f0a546321eb3d77d8bb16ac57cfa283b 475 main/binary-amd64/Packages.gz
  66c7afe176ea07be8865490e916b1f6e 130 main/binary-amd64/Release
- 7a9461be6c31515df741d35499fa7a8b 693 main/binary-arm64/Packages
- 4f2a5267502db69e929df7257905056b 477 main/binary-arm64/Packages.gz
+ 00e9e1ccac5ad5e9da726be8048e1825 693 main/binary-arm64/Packages
+ f0a546321eb3d77d8bb16ac57cfa283b 475 main/binary-arm64/Packages.gz
  1df13dfb3c13559798123a766200d2d4 130 main/binary-arm64/Release
- 7a9461be6c31515df741d35499fa7a8b 693 main/binary-i386/Packages
- 4f2a5267502db69e929df7257905056b 477 main/binary-i386/Packages.gz
+ 00e9e1ccac5ad5e9da726be8048e1825 693 main/binary-i386/Packages
+ f0a546321eb3d77d8bb16ac57cfa283b 475 main/binary-i386/Packages.gz
  8772a8d832a5c9c9434e0050d9a753a4 129 main/binary-i386/Release
 SHA1:
- acaa1a5e9ec3985a8d2a6d065343ee2a35538fdc 693 main/binary-amd64/Packages
- 8fcf1b6ded9d87b4f819153fd0c16ccb1847aada 477 main/binary-amd64/Packages.gz
+ fe0cecf6dcc4c39a2aaf48d221b5259524fd620a 693 main/binary-amd64/Packages
+ a1afefe58a3f00534524c943f5b11647f4606707 475 main/binary-amd64/Packages.gz
  083a98bb3087b09f4537e332432d83dc03331a1d 130 main/binary-amd64/Release
- acaa1a5e9ec3985a8d2a6d065343ee2a35538fdc 693 main/binary-arm64/Packages
- 8fcf1b6ded9d87b4f819153fd0c16ccb1847aada 477 main/binary-arm64/Packages.gz
+ fe0cecf6dcc4c39a2aaf48d221b5259524fd620a 693 main/binary-arm64/Packages
+ a1afefe58a3f00534524c943f5b11647f4606707 475 main/binary-arm64/Packages.gz
  8ded2f96ad8a4086e8341c5a1051eac4e5b26de0 130 main/binary-arm64/Release
- acaa1a5e9ec3985a8d2a6d065343ee2a35538fdc 693 main/binary-i386/Packages
- 8fcf1b6ded9d87b4f819153fd0c16ccb1847aada 477 main/binary-i386/Packages.gz
+ fe0cecf6dcc4c39a2aaf48d221b5259524fd620a 693 main/binary-i386/Packages
+ a1afefe58a3f00534524c943f5b11647f4606707 475 main/binary-i386/Packages.gz
  036d77245284551e72734c4ef815331ca820fabb 129 main/binary-i386/Release
 SHA256:
- b60a58345458c38e022555b3ee3a8465b045ba3e340249ba1c271704fd7fd3a7 693 main/binary-amd64/Packages
- 6d42e81c7eeff0f25ced50b9c4390ceac52e53e994585febf6efb609a7f8837e 477 main/binary-amd64/Packages.gz
+ ab90869cdce56aad668de61f991cfe1131cab44b9bf8ee78957b10a53dff27d9 693 main/binary-amd64/Packages
+ fc0c2e864a257a0437ae7c788082e0835016e8a1622ffc1edde9a565d782fa7b 475 main/binary-amd64/Packages.gz
  dc6dcd63c9b799da753d82b8013b3bd9c79220a4917b864b0df7e97cd04db476 130 main/binary-amd64/Release
- b60a58345458c38e022555b3ee3a8465b045ba3e340249ba1c271704fd7fd3a7 693 main/binary-arm64/Packages
- 6d42e81c7eeff0f25ced50b9c4390ceac52e53e994585febf6efb609a7f8837e 477 main/binary-arm64/Packages.gz
+ ab90869cdce56aad668de61f991cfe1131cab44b9bf8ee78957b10a53dff27d9 693 main/binary-arm64/Packages
+ fc0c2e864a257a0437ae7c788082e0835016e8a1622ffc1edde9a565d782fa7b 475 main/binary-arm64/Packages.gz
  f1be64d52513b6dbb6ae4eedee46922bbadadec8d7906bb8e0a173fcd153bb76 130 main/binary-arm64/Release
- b60a58345458c38e022555b3ee3a8465b045ba3e340249ba1c271704fd7fd3a7 693 main/binary-i386/Packages
- 6d42e81c7eeff0f25ced50b9c4390ceac52e53e994585febf6efb609a7f8837e 477 main/binary-i386/Packages.gz
+ ab90869cdce56aad668de61f991cfe1131cab44b9bf8ee78957b10a53dff27d9 693 main/binary-i386/Packages
+ fc0c2e864a257a0437ae7c788082e0835016e8a1622ffc1edde9a565d782fa7b 475 main/binary-i386/Packages.gz
  3a9b78f832ac8d878efec28a8a7cc4684ce809061d406cf222b4243a675166d0 129 main/binary-i386/Release
