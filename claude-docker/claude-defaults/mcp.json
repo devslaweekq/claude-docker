@@ -53,6 +53,13 @@
       },
       "type": "stdio"
     },
+    "mattermost": {
+      // "headers": {
+      //   "Authorization": "Bearer ${MATTERMOST_TOKEN:-}"
+      // },
+      "type": "http",
+      "url": "${MATTERMOST_URL:-}/plugins/mattermost-ai/mcp-server/mcp"
+    },
     "outline": {
       "headers": {
         "Authorization": "Bearer ${OUTLINE_API_TOKEN:-}"
@@ -67,6 +74,15 @@
     "sentry": {
       "type": "http",
       "url": "https://mcp.sentry.dev/mcp"
+    },
+    "telegram": {
+      "args": ["-y", "@chaindead/telegram-mcp"],
+      "command": "npx",
+      "env": {
+        "TG_API_HASH": "${TG_API_HASH:-}",
+        "TG_APP_ID": "${TG_APP_ID:-}"
+      },
+      "type": "stdio"
     },
     "yandex-cloud": {
       "args": ["-y", "@yandex-cloud/mcp", "-s", "toolkit"],

@@ -1,8 +1,8 @@
 {
-  "$schema": "http://json.schemastore.org/prettierrc",
+  "$schema": "https://json.schemastore.org/prettierrc",
   "overrides": [
     {
-      "files": ["*.js", "*.ts", "*.json", "*.sh", "*.yml", "*.yaml", "*.md"],
+      "files": ["*.js", "*.ts", "*.json", "*.sh", "*.yml", "*.yaml"],
       "options": {
         "singleQuote": true,
         "arrowParens": "avoid",
@@ -10,7 +10,14 @@
         "tabWidth": 2,
         "useTabs": false
       }
+    },
+    {
+      "files": ["**/*.json"],
+      "excludeFiles": ["**/tsconfig*.json", "tsconfig*.json"],
+      "options": {
+        "plugins": ["prettier-plugin-sort-json"]
+      }
     }
   ],
-  "plugins": ["prettier-plugin-packagejson", "prettier-plugin-sort-json"]
+  "plugins": ["prettier-plugin-packagejson"]
 }
