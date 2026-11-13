@@ -1,4 +1,9 @@
 {
+  "_mattermost_headers_example": {
+    "headers": {
+      "Authorization": "Bearer ${MATTERMOST_TOKEN:-}"
+    }
+  },
   "mcpServers": {
     "atlassian": {
       "headers": {
@@ -54,9 +59,6 @@
       "type": "stdio"
     },
     "mattermost": {
-      // "headers": {
-      //   "Authorization": "Bearer ${MATTERMOST_TOKEN:-}"
-      // },
       "type": "http",
       "url": "${MATTERMOST_URL:-}/plugins/mattermost-ai/mcp-server/mcp"
     },

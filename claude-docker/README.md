@@ -310,7 +310,7 @@ Claude Code, `git`, `gh` (GitHub CLI), `fzf`, `bun`, DB clients (`psql`, `mysql`
 | telegram     | Telegram account via MTProto (requires `TG_APP_ID`, `TG_API_HASH`)                  |
 | yandex-cloud | Yandex Cloud toolkit                                                                |
 
-Mattermost: the endpoint is `<MATTERMOST_URL>/plugins/mattermost-ai/mcp-server/mcp` and must be enabled by a Mattermost admin in the Agents plugin. By default the server connects without a token (log in via `/mcp` inside Claude Code); to use a personal access token instead, uncomment the `headers` block for `mattermost` in `mcp.json` and set `MATTERMOST_TOKEN`.
+Mattermost: the endpoint is `<MATTERMOST_URL>/plugins/mattermost-ai/mcp-server/mcp` and must be enabled by a Mattermost admin in the Agents plugin. By default the server connects without a token (log in via `/mcp` inside Claude Code); to use a personal access token instead, copy the `headers` block from `_mattermost_headers_example` into the `mattermost` entry in `mcp.json` and set `MATTERMOST_TOKEN`.
 
 Telegram: [`chaindead/telegram-mcp`](https://github.com/chaindead/telegram-mcp) acts as your personal Telegram account, so it needs a one-time login with a code from Telegram (see its README). Keep the session private.
 
