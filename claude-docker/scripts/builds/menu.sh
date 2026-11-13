@@ -103,7 +103,6 @@ MCPCONF="⚙  Configure MCP servers"
 BASHC="•  bash in container"
 SCRATCH_DIR="$HOME/scratch"
 MCP_CONF_FILE="$HOME/.claude-docker-mcp-configured"
-MCP_MANAGED_FILE="$HOME/.claude-docker-mcp-managed"
 
 O=$'\033[38;5;208m'; B=$'\033[1m'; D=$'\033[2m'; R=$'\033[0m'   # orange / bold / dim / reset
 
@@ -161,79 +160,93 @@ CLEANUP="__CLEANUP__"  # special id for the "clean up old sessions" row
 
 # --- MCP server selection ---
 
-# Remove previously managed MCP servers from ~/.claude.json
-mcp_remove_managed() {
-  [ -f "$MCP_MANAGED_FILE" ] || return 0
+# Servers from the shipped mcp.json that are currently present in ~/.claude.json (user scope)
+mcp_connected_servers() {
   [ -f "$HOME/.claude.json" ] || return 0
-  local managed_json tmp
-  managed_json="$(cat "$MCP_MANAGED_FILE")"
-  tmp="$(mktemp)"
-  jq --argjson mgd "$managed_json" \
-     'if .mcpServers then .mcpServers |= with_entries(select(.key | IN($mgd[]) | not)) else . end' \
-     "$HOME/.claude.json" > "$tmp" && mv "$tmp" "$HOME/.claude.json"
+  jq -r --slurpfile d "$DEF/mcp.json" \
+     '((.mcpServers // {}) | keys) as $have | $d[0].mcpServers | keys | sort[] | select(IN($have[]))' \
+     "$HOME/.claude.json" 2>/dev/null || true
 }
 
-# Show fzf/numeric selection UI, apply selected servers, update managed list
+# Show fzf/numeric UI listing every shipped server with its current state (● connected, ○ off).
+# Servers picked in the UI are switched to the opposite state: connected ones are removed from
+# ~/.claude.json, the others are added from the shipped mcp.json. Servers that are not in the
+# shipped mcp.json are never touched.
 mcp_select_and_apply() {
   local mcp_file="$DEF/mcp.json"
   [ -f "$mcp_file" ] || return 0
 
-  local all_servers
+  local all_servers connected_servers
   mapfile -t all_servers < <(jq -r '.mcpServers | keys | sort[]' "$mcp_file")
   [ ${#all_servers[@]} -eq 0 ] && return 0
+  mapfile -t connected_servers < <(mcp_connected_servers)
 
-  local selected_servers=()
+  local -A is_on=()
+  local s
+  for s in "${connected_servers[@]}"; do is_on["$s"]=1; done
+
+  local flip=()
 
   if command -v fzf >/dev/null 2>&1; then
-    local selected
-    selected="$(printf '%s\n' "${all_servers[@]}" | \
+    local rows=() selected line
+    for s in "${all_servers[@]}"; do
+      if [ -n "${is_on[$s]:-}" ]; then rows+=("● $s"); else rows+=("○ $s"); fi
+    done
+    selected="$(printf '%s\n' "${rows[@]}" | \
       fzf --multi --height=80% --reverse --border=rounded \
           --pointer='▶' --marker='✓' \
           --color='pointer:208,prompt:208,marker:208' \
           --prompt='MCP servers ▸ ' \
-          --header='Tab — toggle · Ctrl+A — all · Enter — confirm · Esc — skip' \
+          --header='● connected · ○ off — Tab marks · Enter switches marked (or highlighted) · Esc — skip' \
           --bind='ctrl-a:toggle-all')" || selected=""
-    [ -n "$selected" ] && mapfile -t selected_servers <<< "$selected"
+    if [ -n "$selected" ]; then
+      while IFS= read -r line; do flip+=("${line#* }"); done <<< "$selected"
+    fi
   else
     print_header
     printf '   Configure MCP Servers\n\n'
     local i=1
     for s in "${all_servers[@]}"; do
-      printf '  %2d) %s\n' "$i" "$s"
+      printf '  %2d) [%s] %s\n' "$i" "$([ -n "${is_on[$s]:-}" ] && echo x || echo ' ')" "$s"
       i=$((i + 1))
     done
-    printf '   A) All servers\n   Enter — skip all\n\n'
-    local choice
-    read -rp '  Select (space-separated numbers or A): ' choice
+    printf '   A) Connect all\n   Enter — no changes\n\n'
+    local choice num
+    read -rp '  Switch on/off (space-separated numbers or A): ' choice
     if [ "${choice,,}" = "a" ] || [ "${choice,,}" = "all" ]; then
-      selected_servers=("${all_servers[@]}")
+      for s in "${all_servers[@]}"; do
+        [ -n "${is_on[$s]:-}" ] || flip+=("$s")
+      done
     else
       for num in $choice; do
         if [[ "$num" =~ ^[0-9]+$ ]] && [ "$num" -ge 1 ] && [ "$num" -le "${#all_servers[@]}" ]; then
-          selected_servers+=("${all_servers[$((num - 1))]}")
+          flip+=("${all_servers[$((num - 1))]}")
         fi
       done
     fi
   fi
 
-  # Remove previously managed servers before applying new selection
-  mcp_remove_managed
+  local to_add=() to_remove=()
+  for s in "${flip[@]}"; do
+    if [ -n "${is_on[$s]:-}" ]; then to_remove+=("$s"); else to_add+=("$s"); fi
+  done
 
-  [ -f "$HOME/.claude.json" ] || echo '{}' > "$HOME/.claude.json"
-
-  if [ ${#selected_servers[@]} -gt 0 ]; then
-    local selected_json tmp
-    selected_json="$(printf '%s\n' "${selected_servers[@]}" | jq -R . | jq -s .)"
+  if [ ${#to_add[@]} -gt 0 ] || [ ${#to_remove[@]} -gt 0 ]; then
+    [ -f "$HOME/.claude.json" ] || echo '{}' > "$HOME/.claude.json"
+    local add_json rm_json tmp
+    add_json="$(jq -cn '$ARGS.positional' --args "${to_add[@]}")"
+    rm_json="$(jq -cn '$ARGS.positional' --args "${to_remove[@]}")"
     tmp="$(mktemp)"
     jq --slurpfile d "$mcp_file" \
-       --argjson sel "$selected_json" \
-       '.mcpServers = (($d[0].mcpServers | with_entries(select(.key | IN($sel[])))) + (.mcpServers // {}))' \
+       --argjson add "$add_json" \
+       --argjson rm "$rm_json" \
+       '.mcpServers = ((.mcpServers // {}) | with_entries(select(.key | IN($rm[]) | not)))
+        | .mcpServers = (($d[0].mcpServers | with_entries(select(.key | IN($add[])))) + .mcpServers)' \
        "$HOME/.claude.json" > "$tmp" && mv "$tmp" "$HOME/.claude.json"
-    printf '%s\n' "${selected_servers[@]}" | jq -R . | jq -s . > "$MCP_MANAGED_FILE"
-    printf '\n  Added MCP servers: %s\n' "${selected_servers[*]}"
+    if [ ${#to_add[@]} -gt 0 ]; then printf '\n  Connected MCP servers: %s\n' "${to_add[*]}"; fi
+    if [ ${#to_remove[@]} -gt 0 ]; then printf '\n  Disconnected MCP servers: %s\n' "${to_remove[*]}"; fi
   else
-    echo '[]' > "$MCP_MANAGED_FILE"
-    printf '\n  No MCP servers added.\n'
+    printf '\n  No changes.\n'
   fi
 
   touch "$MCP_CONF_FILE"
@@ -415,7 +428,7 @@ show_fzf_menu() {
     local dir_items=() choice
     for d in "${dirs[@]}"; do dir_items+=("•  $d"); done
 
-    choice="$(printf '%s\n' "$SCRATCH" "$NEWDIR" "${dir_items[@]}" "$MCPCONF" "$BASHC" \
+    choice="$(printf '%s\n' "$SCRATCH" "$NEWDIR" "$BASHC" "$MCPCONF" "${dir_items[@]}" \
       | fzf --height=60% --reverse --border=rounded --pointer='▶' \
             --color='pointer:208,prompt:208' --prompt='▸ ' \
             --header='type to search · ↑↓ select · Enter · Esc — quit' \

@@ -77,15 +77,6 @@
       "type": "http",
       "url": "https://mcp.sentry.dev/mcp"
     },
-    "telegram": {
-      "args": ["-y", "@chaindead/telegram-mcp"],
-      "command": "npx",
-      "env": {
-        "TG_API_HASH": "${TG_API_HASH:-}",
-        "TG_APP_ID": "${TG_APP_ID:-}"
-      },
-      "type": "stdio"
-    },
     "yandex-cloud": {
       "args": ["-y", "@yandex-cloud/mcp", "-s", "toolkit"],
       "command": "npx",

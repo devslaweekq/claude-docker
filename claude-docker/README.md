@@ -11,7 +11,7 @@ Run [Claude Code](https://docs.anthropic.com/en/docs/claude-code) in an isolated
 ## Features
 
 - 🗂️ **Persistent sessions with resume** — an fzf menu over `/workspace` subdirectories, newest first, with a picker for scratch sessions and bash.
-- 🔌 **MCP servers pre-configured** — GitHub, Context7, Jira/Atlassian, Grafana, Outline, Mattermost, Telegram, Sentry, Playwright, Kubernetes, Yandex Cloud, and [ComfyUI](#comfyui--ai-image-generation) ready out of the box.
+- 🔌 **MCP servers pre-configured** — GitHub, Context7, Jira/Atlassian, Grafana, Outline, Mattermost, Sentry, Playwright, Kubernetes, Yandex Cloud, and [ComfyUI](#comfyui--ai-image-generation) ready out of the box.
 - 🎨 **Optional GPU image generation** — `--comfyui` starts a thin, self-installing ComfyUI container alongside the session; Claude generates images directly via MCP.
 - 🌐 **Corporate proxy support** — `HTTP_PROXY`/`HTTPS_PROXY` and self-signed TLS CA passthrough, for locked-down networks.
 - 📌 **User-level standing rules** — `~/.claude/CLAUDE.md` seeded once from `claude-defaults/` (never overwrites your edits), for behavioral rules that should apply across every project.
@@ -307,12 +307,11 @@ Claude Code, `git`, `gh` (GitHub CLI), `fzf`, `bun`, DB clients (`psql`, `mysql`
 | mattermost   | Mattermost chat via the Agents plugin MCP endpoint (requires `MATTERMOST_URL`)      |
 | kubernetes   | Kubernetes cluster (read-only)                                                      |
 | sentry       | Sentry error tracking                                                               |
-| telegram     | Telegram account via MTProto (requires `TG_APP_ID`, `TG_API_HASH`)                  |
 | yandex-cloud | Yandex Cloud toolkit                                                                |
 
 Mattermost: the endpoint is `<MATTERMOST_URL>/plugins/mattermost-ai/mcp-server/mcp` and must be enabled by a Mattermost admin in the Agents plugin. By default the server connects without a token (log in via `/mcp` inside Claude Code); to use a personal access token instead, copy the `headers` block from `_mattermost_headers_example` into the `mattermost` entry in `mcp.json` and set `MATTERMOST_TOKEN`.
 
-Telegram: [`chaindead/telegram-mcp`](https://github.com/chaindead/telegram-mcp) acts as your personal Telegram account, so it needs a one-time login with a code from Telegram (see its README). Keep the session private.
+The startup menu entry "⚙ Configure MCP servers" lists every server above with its current state (● connected, ○ off). Mark the ones to switch (Tab, or Enter on the highlighted row) and press Enter: connected servers are removed from `~/.claude.json`, the others are added. Servers you added yourself (not in the list above) are never touched.
 
 Plugins pre-installed: [superpowers](https://github.com/anthropics/claude-code-superpowers), [claude-mem](https://github.com/thedotmack/claude-mem).
 
@@ -332,7 +331,6 @@ Plugins pre-installed: [superpowers](https://github.com/anthropics/claude-code-s
 | `GRAFANA_URL` / `GRAFANA_SERVICE_ACCOUNT_TOKEN` | No              | Grafana MCP                                                       |
 | `OUTLINE_URL` / `OUTLINE_API_TOKEN`             | No              | Outline MCP                                                       |
 | `MATTERMOST_URL` / `MATTERMOST_TOKEN`           | No              | Mattermost MCP (token only if `headers` in `mcp.json` is enabled) |
-| `TG_APP_ID` / `TG_API_HASH`                     | No              | Telegram MCP                                                      |
 
 See [`.env.example`](../.env.example) for the full template.
 
