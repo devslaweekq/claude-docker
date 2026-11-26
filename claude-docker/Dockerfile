@@ -1,10 +1,11 @@
 FROM node:24.18.0-slim
 
 # Base tools + git/PR + DB clients (psql, mysql, redis-cli) + GitHub CLI + Claude Code.
-# Also: ffmpeg, fonts and the shared libraries headless Chromium needs (libnss3, libgbm1, libasound2, ...), so
-# an already-installed Playwright/Chrome in ~/.cache/ms-playwright can start inside the container (video and
-# image rendering). The browser itself is NOT baked in. Packages renamed to *t64 on newer Debian/Ubuntu are
-# resolved in the loop below, so the same Dockerfile works with both naming schemes.
+# Also: fonts and the shared libraries headless Chromium needs (libnss3, libgbm1, libasound2, ...), so
+# an already-installed Playwright/Chrome in ~/.cache/ms-playwright can start inside the container (jpg/png/pdf
+# rendering). The browser itself is NOT baked in, and neither is ffmpeg: Debian's ffmpeg drags in ~450 MB of
+# dependencies (llvm, mesa, codecs), so video work must bring its own static ffmpeg. Packages renamed to *t64
+# on newer Debian/Ubuntu are resolved in the loop below, so the same Dockerfile works with both naming schemes.
 # User node (uid 1000) already exists in the image.
 # One RUN for both apt-get passes (the second needs curl+gnupg from the first to add the
 # GitHub CLI repo) so /var/lib/apt/lists is cleaned exactly once, at the end: cleaning it in
@@ -25,7 +26,7 @@ RUN apt-get update \
       > /etc/apt/sources.list.d/github-cli.list \
  && apt-get update && apt-get install -y --no-install-recommends gh \
  && apt-get install -y --no-install-recommends \
-      ffmpeg fonts-liberation fonts-noto-color-emoji fonts-dejavu-core \
+      fonts-liberation fonts-noto-color-emoji fonts-dejavu-core \
       libnss3 libnspr4 libdbus-1-3 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
       libxrender1 libxi6 libdrm2 libgbm1 libpango-1.0-0 libcairo2 libx11-6 libxext6 libxcb1 \
  && for group in "libasound2t64 libasound2" "libatk1.0-0t64 libatk1.0-0" "libatk-bridge2.0-0t64 libatk-bridge2.0-0" \
