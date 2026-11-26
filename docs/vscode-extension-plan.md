@@ -13,7 +13,8 @@ Decided by the owner:
 
 - The extension is a **separate project**. It does **not** modify this repository (`launcher`, `menu.sh`, compose files, image).
 - It runs **the same Docker image** (`slaweekq/claude-docker`), so `claude` still runs inside the isolated container,
-  authenticated with the same OAuth token (`CLAUDE_CODE_OAUTH_TOKEN`).
+  authenticated either with the OAuth token (`CLAUDE_CODE_OAUTH_TOKEN`) or with a custom endpoint (base URL + API key,
+  see section 3a), exactly as `claude-docker` itself now supports.
 - All launcher functionality is reimplemented inside the extension (TypeScript, `docker` CLI under the hood).
 
 Non-goals:
@@ -57,6 +58,34 @@ Source of truth: `claude-docker/launcher`, `docker-compose.yml`, `claude-docker/
 5. **Location:** a new repository, e.g. `claude-docker-vscode`. Not inside this monorepo.
 6. Docker is invoked through the `docker` CLI (not the Docker Engine API) to match the launcher's behaviour exactly
    and to keep the extension dependency-free.
+
+## 3a. Authentication profiles (OAuth token or custom endpoint)
+
+The launcher side is already implemented in `claude-docker` 1.5.1 (see `.env.example` and the "Custom endpoint" section of
+`claude-docker/README.md`); the extension mirrors it. Claude Code itself reads the environment variables, so the extension
+only has to pass the right ones into the container.
+
+An **auth profile** is a named set of values; one profile is active at a time and can be switched from the status bar:
+
+| Profile type     | Env passed to the container                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| OAuth token      | `CLAUDE_CODE_OAUTH_TOKEN`                                                                                  |
+| Custom endpoint  | `ANTHROPIC_BASE_URL` + one of `ANTHROPIC_API_KEY` (X-Api-Key) or `ANTHROPIC_AUTH_TOKEN` (Bearer)           |
+| Custom endpoint+ | the above plus optional `ANTHROPIC_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`, `_SONNET_MODEL`, `_HAIKU_MODEL` |
+
+Rules:
+
+- A profile passes exactly its own variables and never the others, so a leftover token cannot leak into a custom-endpoint
+  session (and vice versa). Profiles are stored in `SecretStorage`; only non-secret fields (name, base URL, model names)
+  may live in plain settings.
+- Validation on save: URL is `https://` (or `http://localhost` / private host with an explicit warning), exactly one credential.
+- "Test connection" command: a throwaway container that runs a minimal `claude -p` call and reports success or the
+  HTTP status, without printing the key.
+- With a custom endpoint the "Headroom" toggle is disabled with an explanation: the launcher overrides
+  `ANTHROPIC_BASE_URL` with the local Headroom proxy, so the two cannot be combined.
+- Proxy settings: offer to add the endpoint host to `NO_PROXY` when an outbound proxy is configured.
+- Third-party endpoints see all prompts and file contents Claude sends. The UI should show the endpoint host in the
+  status bar and ask for a one-time confirmation when a non-Anthropic host is selected.
 
 ## 4. Architecture sketch
 
@@ -106,8 +135,10 @@ _Accept:_ a command "Start session in project X" opens a terminal with a working
 Unit tests assert the argv against golden fixtures derived from `docker compose config` output of this repo.
 
 **WP2. Settings and secrets.** Settings schema (projects roots, Claude home, image tag, proxy, extra mounts), a
-"Set token" flow writing to `SecretStorage`, env injection helper that never puts secret values in argv.
-_Accept:_ no secret appears in `docker inspect`, process args, or the Output channel; unit-tested.
+auth profiles (section 3a) with a "Set token / Add endpoint" flow writing to `SecretStorage`, env injection helper that
+never puts secret values in argv, and the active-profile selector.
+_Accept:_ no secret appears in `docker inspect`, process args, or the Output channel; switching profile changes only
+the env of newly started sessions; unit-tested.
 
 **WP3. Project discovery.** `PROJECT_DIRS` semantics from the README ("Smart launch from any folder" table): project
 inside a root, root itself, or outside all roots (cwd mounted as scratch). Host path ↔ `/workspace/<name>` mapping.
@@ -135,7 +166,7 @@ service up; closing the last stops it; GPU absence produces a clear message.
 about which env vars each server needs. _Accept:_ toggling matches `menu.sh` behaviour; missing-credentials warning.
 
 **WP9. Passthrough commands** (needs WP1). "Login", "Setup token" (stores the result into `SecretStorage` on user
-confirmation), "Auth status", "Pull latest image", "Show version". _Accept:_ each runs in a throwaway container and
+confirmation; offered only for OAuth profiles), "Auth status", "Pull latest image", "Show version". _Accept:_ each runs in a throwaway container and
 reports the exit code.
 
 ### Wave 3 — polish (parallel, after Wave 2)

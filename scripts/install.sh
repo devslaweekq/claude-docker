@@ -157,6 +157,8 @@ Next step — edit $INSTALL_DIR/.env:
   • PROJECT_DIRS             — comma-separated host folders, each mounted as /workspace/<name>
                                e.g. PROJECT_DIRS=/home/user/work,/home/user/personal
   • CLAUDE_CODE_OAUTH_TOKEN  — from \`claude setup-token\`, or leave empty to /login inside
+  • or, for a custom endpoint instead of the token: ANTHROPIC_BASE_URL plus ANTHROPIC_API_KEY
+    (or ANTHROPIC_AUTH_TOKEN) — see the commented block in .env
 
 Then run: ${chosen_cmd:-$LAUNCHER}
 

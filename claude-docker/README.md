@@ -265,10 +265,32 @@ If `HTTP_PROXY` / `HTTPS_PROXY` are set in `.env` (see [Proxy](#proxy-optional))
 
 ## Authentication
 
-| Method                              | When to use                                          |
-| ----------------------------------- | ---------------------------------------------------- |
-| `CLAUDE_CODE_OAUTH_TOKEN` in `.env` | Recommended — works headless, skips the login wizard |
-| `/login` inside the container       | Personal Pro/Max account or first-time setup         |
+| Method                                                      | When to use                                                        |
+| ----------------------------------------------------------- | ------------------------------------------------------------------ |
+| `CLAUDE_CODE_OAUTH_TOKEN` in `.env`                         | Recommended — works headless, skips the login wizard               |
+| `/login` inside the container                               | Personal Pro/Max account or first-time setup                       |
+| `ANTHROPIC_BASE_URL` + `ANTHROPIC_API_KEY` / `…_AUTH_TOKEN` | Custom endpoint: any Anthropic-compatible API, not Anthropic's own |
+
+### Custom endpoint (URL + API key)
+
+To run Claude Code against a gateway or a third-party provider that speaks the Anthropic API, set these in `.env`
+instead of the OAuth token:
+
+```env
+ANTHROPIC_BASE_URL=https://api.example.com/anthropic
+ANTHROPIC_API_KEY=sk-...            # X-Api-Key header; or use ANTHROPIC_AUTH_TOKEN for "Authorization: Bearer"
+ANTHROPIC_MODEL=provider-model-name # optional; also ANTHROPIC_DEFAULT_{OPUS,SONNET,HAIKU}_MODEL
+```
+
+- Use **one** credential: `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN`. Claude Code prefers them over
+  `CLAUDE_CODE_OAUTH_TOKEN`, but comment the OAuth line out anyway so the setup is unambiguous.
+- Claude Code may ask once to confirm the API key on the first interactive start; the answer is stored in
+  `~/claude-docker/home`.
+- If you use `HTTP_PROXY`/`HTTPS_PROXY`, add the endpoint's host to `NO_PROXY` when it is internal.
+- `--headroom` sets `ANTHROPIC_BASE_URL` to the local Headroom proxy for that session and overrides the value from
+  `.env`, so don't combine it with a custom endpoint.
+- The endpoint must implement the Anthropic Messages API (including tool use); model quality and feature support
+  (thinking, images, prompt caching) depend on the provider.
 
 **Corporate token:** get it from your admin and put it in `CLAUDE_CODE_OAUTH_TOKEN`. You don't need access to the corporate Claude.ai web interface.
 
@@ -319,6 +341,9 @@ Plugins pre-installed: [superpowers](https://github.com/anthropics/claude-code-s
 | ----------------------------------------------- | --------------- | ----------------------------------------------------------------- |
 | `PROJECT_DIRS`                                  | Clone path only | Comma-separated host folders; each mounted as `/workspace/<name>` |
 | `CLAUDE_CODE_OAUTH_TOKEN`                       | Recommended     | OAuth token (`sk-ant-oat01-…`)                                    |
+| `ANTHROPIC_BASE_URL`                            | No              | Custom Anthropic-compatible endpoint (instead of the OAuth token) |
+| `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN`    | With base URL   | Credential for the custom endpoint (`X-Api-Key` / Bearer)         |
+| `ANTHROPIC_MODEL`, `ANTHROPIC_DEFAULT_*_MODEL`  | No              | Model names the custom endpoint understands                       |
 | `HTTP_PROXY` / `HTTPS_PROXY`                    | No              | Outbound proxy for Anthropic API                                  |
 | `NO_PROXY` / `no_proxy`                         | No              | Hosts that bypass the proxy                                       |
 | `GH_TOKEN`                                      | No              | GitHub CLI + GitHub MCP                                           |
@@ -349,12 +374,12 @@ TLS certificates are picked up at container start — no image rebuild needed.
 
 ## Troubleshooting
 
-| Problem                                    | Fix                                                                                    |
-| ------------------------------------------ | -------------------------------------------------------------------------------------- |
-| `401` from Claude                          | Check `CLAUDE_CODE_OAUTH_TOKEN` or run `/login` inside the container                   |
-| First-run login screen even with token set | Make sure the token is in `--env-file` or use method A (`./claude-docker/launcher`)    |
-| `Settings Error` / invalid `settings.json` | Delete `~/claude-docker/home/.claude/settings.json` and restart — it will be recreated |
-| `cannot connect to Docker daemon`          | Start Docker Desktop / enable WSL integration                                          |
+| Problem                                    | Fix                                                                                                                                          |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `401` from Claude                          | Check `CLAUDE_CODE_OAUTH_TOKEN` (or `ANTHROPIC_BASE_URL` + `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`), or run `/login` inside the container |
+| First-run login screen even with token set | Make sure the token is in `--env-file` or use method A (`./claude-docker/launcher`)                                                          |
+| `Settings Error` / invalid `settings.json` | Delete `~/claude-docker/home/.claude/settings.json` and restart — it will be recreated                                                       |
+| `cannot connect to Docker daemon`          | Start Docker Desktop / enable WSL integration                                                                                                |
 
 ---
 

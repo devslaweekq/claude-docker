@@ -75,8 +75,8 @@ if [ -d "$DEF/commands" ]; then
   cp -n "$DEF/commands/"*.md "$HOME/.claude/commands/" 2>/dev/null || true
 fi
 
-# OAuth token in .env: skip first-run login wizard (Claude Code ignores env token in onboarding)
-if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+# OAuth token or API key/auth token in .env: skip first-run login wizard (Claude Code ignores env credentials in onboarding)
+if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] || [ -n "${ANTHROPIC_API_KEY:-}" ] || [ -n "${ANTHROPIC_AUTH_TOKEN:-}" ]; then
   [ -f "$HOME/.claude.json" ] || echo '{}' > "$HOME/.claude.json"
   tmp="$(mktemp)"
   jq '.hasCompletedOnboarding = true' "$HOME/.claude.json" > "$tmp" && mv "$tmp" "$HOME/.claude.json"

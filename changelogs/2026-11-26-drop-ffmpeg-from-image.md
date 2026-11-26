@@ -2,6 +2,22 @@
 
 ## [1.5.1] - 2026-11-26
 
+### Added
+
+#### Custom endpoint authentication (base URL + API key)
+
+- `.env` can now point Claude Code at any Anthropic-compatible API instead of using the OAuth token:
+  `ANTHROPIC_BASE_URL` plus `ANTHROPIC_API_KEY` (X-Api-Key) or `ANTHROPIC_AUTH_TOKEN` (Bearer), with optional
+  `ANTHROPIC_MODEL` and `ANTHROPIC_DEFAULT_{OPUS,SONNET,HAIKU}_MODEL`. The variables reach the container through the
+  existing `env_file`, so the launcher and compose files are unchanged.
+- `menu.sh` now skips the first-run login wizard when `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN` is set, as it
+  already did for `CLAUDE_CODE_OAUTH_TOKEN`.
+- Documented in `.env.example`, `claude-docker/README.md` (Authentication, configuration reference, troubleshooting) and
+  the post-install hints of `scripts/install.sh` and `scripts/deb/postinst`.
+- Known limitation: `--headroom` overrides `ANTHROPIC_BASE_URL` with the local proxy, so it cannot be combined with a
+  custom endpoint.
+- The VS Code extension plan (`docs/vscode-extension-plan.md`) now includes auth profiles for the same modes.
+
 ### Removed
 
 #### ffmpeg and its dependency tree
