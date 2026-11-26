@@ -1,6 +1,10 @@
 FROM node:24.18.0-slim
 
 # Base tools + git/PR + DB clients (psql, mysql, redis-cli) + GitHub CLI + Claude Code.
+# Also: ffmpeg, fonts and the shared libraries headless Chromium needs (libnss3, libgbm1, libasound2, ...), so
+# an already-installed Playwright/Chrome in ~/.cache/ms-playwright can start inside the container (video and
+# image rendering). The browser itself is NOT baked in. Packages renamed to *t64 on newer Debian/Ubuntu are
+# resolved in the loop below, so the same Dockerfile works with both naming schemes.
 # User node (uid 1000) already exists in the image.
 # One RUN for both apt-get passes (the second needs curl+gnupg from the first to add the
 # GitHub CLI repo) so /var/lib/apt/lists is cleaned exactly once, at the end: cleaning it in
@@ -20,6 +24,16 @@ RUN apt-get update \
  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
       > /etc/apt/sources.list.d/github-cli.list \
  && apt-get update && apt-get install -y --no-install-recommends gh \
+ && apt-get install -y --no-install-recommends \
+      ffmpeg fonts-liberation fonts-noto-color-emoji fonts-dejavu-core \
+      libnss3 libnspr4 libdbus-1-3 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+      libxrender1 libxi6 libdrm2 libgbm1 libpango-1.0-0 libcairo2 libx11-6 libxext6 libxcb1 \
+ && for group in "libasound2t64 libasound2" "libatk1.0-0t64 libatk1.0-0" "libatk-bridge2.0-0t64 libatk-bridge2.0-0" \
+      "libatspi2.0-0t64 libatspi2.0-0" "libglib2.0-0t64 libglib2.0-0" "libcups2t64 libcups2"; do \
+      for pkg in $group; do \
+        if apt-cache show "$pkg" >/dev/null 2>&1; then apt-get install -y --no-install-recommends "$pkg"; break; fi; \
+      done; \
+    done \
  && rm -rf /var/lib/apt/lists/*
 
 # Claude Code is installed at runtime by ensure-claude-cli.sh into ~/.npm-global (on volume, node user).

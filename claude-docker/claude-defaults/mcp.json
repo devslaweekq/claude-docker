@@ -1,9 +1,4 @@
 {
-  "_mattermost_headers_example": {
-    "headers": {
-      "Authorization": "Bearer ${MATTERMOST_TOKEN:-}"
-    }
-  },
   "mcpServers": {
     "atlassian": {
       "headers": {
@@ -50,6 +45,16 @@
       },
       "type": "stdio"
     },
+    "grafana-stage": {
+      "args": ["mcp-grafana", "--disable-write"],
+      "command": "uvx",
+      "env": {
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN": "${GRAFANA_STAGE_SERVICE_ACCOUNT_TOKEN}",
+        "GRAFANA_URL": "${GRAFANA_STAGE_URL}",
+        "NO_PROXY": "*"
+      },
+      "type": "stdio"
+    },
     "kubernetes": {
       "args": ["-y", "mcp-server-kubernetes"],
       "command": "npx",
@@ -57,10 +62,6 @@
         "ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS": "true"
       },
       "type": "stdio"
-    },
-    "mattermost": {
-      "type": "http",
-      "url": "${MATTERMOST_URL:-}/plugins/mattermost-ai/mcp-server/mcp"
     },
     "outline": {
       "headers": {
@@ -76,11 +77,6 @@
     "sentry": {
       "type": "http",
       "url": "https://mcp.sentry.dev/mcp"
-    },
-    "yandex-cloud": {
-      "args": ["-y", "@yandex-cloud/mcp", "-s", "toolkit"],
-      "command": "npx",
-      "type": "stdio"
     }
   }
 }
